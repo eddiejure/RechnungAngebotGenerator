@@ -215,7 +215,7 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({ data }) => {
           {/* Brief-Inhalt für Freie Briefe */}
           {data.type === 'letter' ? (
             <View style={{ marginBottom: 25, fontSize: 10, lineHeight: 1.5 }}>
-              <Text>Sehr geehrte Damen und Herren,</Text>
+              <Text>{data.letterGreeting || 'Sehr geehrte Damen und Herren,'}</Text>
               <Text style={{ marginTop: 10, marginBottom: 10 }}>
                 {data.letterContent || 'Briefinhalt...'}
               </Text>
@@ -284,18 +284,20 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({ data }) => {
           )}
         </View>
 
-        {/* Fußzeile mit Pflichtangaben */}
-        <View style={styles.footer}>
-          <Text style={styles.footerRow}>
-            Bankverbindung: {data.company.bankName} | IBAN: {data.company.iban} | BIC: {data.company.bic}
-          </Text>
-          <Text style={styles.footerRow}>
-            {data.company.registerCourt} {data.company.registerNumber} | Geschäftsführer: {data.company.manager}
-          </Text>
-          <Text style={styles.footerRow}>
-            Steuernummer: {data.company.taxId} | USt-IdNr.: {data.company.vatId}
-          </Text>
-        </View>
+        {/* Fußzeile mit Pflichtangaben - nur für Rechnungen und Angebote */}
+        {data.type !== 'letter' && (
+          <View style={styles.footer}>
+            <Text style={styles.footerRow}>
+              Bankverbindung: {data.company.bankName} | IBAN: {data.company.iban} | BIC: {data.company.bic}
+            </Text>
+            <Text style={styles.footerRow}>
+              {data.company.registerCourt} {data.company.registerNumber} | Geschäftsführer: {data.company.manager}
+            </Text>
+            <Text style={styles.footerRow}>
+              Steuernummer: {data.company.taxId} | USt-IdNr.: {data.company.vatId}
+            </Text>
+          </View>
+        )}
       </Page>
     </Document>
   );

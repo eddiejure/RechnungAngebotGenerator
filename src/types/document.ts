@@ -50,4 +50,5 @@ export interface DocumentData {
   createdAt: string;
   letterSubject?: string;
   letterContent?: string;
+  letterGreeting?: string;
 }

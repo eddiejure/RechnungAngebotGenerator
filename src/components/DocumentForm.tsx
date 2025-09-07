@@ -42,6 +42,7 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({ initialData, onSave 
   const [notes, setNotes] = useState('');
   const [letterSubject, setLetterSubject] = useState('');
   const [letterContent, setLetterContent] = useState('');
+  const [letterGreeting, setLetterGreeting] = useState('Sehr geehrte Damen und Herren,');
   const [showPreview, setShowPreview] = useState(false);
   const [showTemplateSelector, setShowTemplateSelector] = useState(false);
   const [lineItemTemplates, setLineItemTemplates] = useState<LineItemTemplate[]>([]);
@@ -86,6 +87,7 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({ initialData, onSave 
       if (initialData.type === 'letter') {
         setLetterSubject(initialData.letterSubject || '');
         setLetterContent(initialData.letterContent || '');
+        setLetterGreeting(initialData.letterGreeting || 'Sehr geehrte Damen und Herren,');
       }
     } else {
       // Auto-generate document number
@@ -180,6 +182,7 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({ initialData, onSave 
     notes,
     letterSubject: documentType === 'letter' ? letterSubject : undefined,
     letterContent: documentType === 'letter' ? letterContent : undefined,
+    letterGreeting: documentType === 'letter' ? letterGreeting : undefined,
     subtotal,
     vatAmount,
     total,
@@ -320,53 +323,19 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({ initialData, onSave 
         {/* Letter-specific fields */}
         {documentType === 'letter' && (
           <div className="bg-white rounded-lg shadow-sm border p-6">
-            <h2 className="text-xl font-semibold mb-4">Brief-Inhalt</h2>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Betreff
-                </label>
-                <input
-                  type="text"
-                  value={letterSubject}
-                  onChange={(e) => setLetterSubject(e.target.value)}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Betreff des Briefes..."
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Brief-Inhalt
-                </label>
-                <textarea
-                  value={letterContent}
-                  onChange={(e) => setLetterContent(e.target.value)}
-                  className="w-full h-64 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Sehr geehrte Damen und Herren,&#10;&#10;...&#10;&#10;Mit freundlichen Grüßen"
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Customer Information - moved outside the grid for letters */}
-        {documentType === 'letter' ? (
-          <div className="bg-white rounded-lg shadow-sm border p-6">
             <h2 className="text-xl font-semibold mb-4">Empfängerdaten</h2>
             
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Firmenname / Name
+                  Name / Firma
                 </label>
                 <input
                   type="text"
                   value={customer.name}
                   onChange={(e) => setCustomer({ ...customer, name: e.target.value })}
                   className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Max Mustermann GmbH"
+                  placeholder="Max Mustermann"
                 />
               </div>
               
@@ -379,7 +348,7 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({ initialData, onSave 
                   value={customer.address}
                   onChange={(e) => setCustomer({ ...customer, address: e.target.value })}
                   className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Kundenstraße 456"
+                  placeholder="Musterstraße 123"
                 />
               </div>
               
@@ -406,13 +375,15 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({ initialData, onSave 
                     value={customer.city}
                     onChange={(e) => setCustomer({ ...customer, city: e.target.value })}
                     className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="München"
+                    placeholder="Berlin"
                   />
                 </div>
               </div>
             </div>
-          </div>
-        ) : (
+        )}
+
+        {/* Customer Information for invoices/quotes */}
+        {documentType !== 'letter' && (
           /* Customer Information for invoices/quotes */
           <div className="bg-white rounded-lg shadow-sm border p-6">
             <h2 className="text-xl font-semibold mb-4">Kundendaten</h2>
@@ -475,6 +446,53 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({ initialData, onSave 
           </div>
         )}
       </div>
+
+      {/* Letter Content - full width for letters */}
+      {documentType === 'letter' && (
+        <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
+          <h2 className="text-xl font-semibold mb-4">Brief-Inhalt</h2>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Betreff
+              </label>
+              <input
+                type="text"
+                value={letterSubject}
+                onChange={(e) => setLetterSubject(e.target.value)}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Betreff des Briefes..."
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Anrede
+              </label>
+              <input
+                type="text"
+                value={letterGreeting}
+                onChange={(e) => setLetterGreeting(e.target.value)}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Sehr geehrte Damen und Herren,"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Brief-Text
+              </label>
+              <textarea
+                value={letterContent}
+                onChange={(e) => setLetterContent(e.target.value)}
+                className="w-full h-64 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Hier können Sie Ihren Brieftext eingeben...&#10;&#10;Mit freundlichen Grüßen"
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Line Items - only for invoices and quotes */}
       {documentType !== 'letter' && (
