@@ -380,6 +380,7 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({ initialData, onSave 
                 </div>
               </div>
             </div>
+          </div>
         )}
 
         {/* Customer Information for invoices/quotes */}
