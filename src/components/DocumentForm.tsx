@@ -448,53 +448,6 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({ initialData, onSave 
         )}
       </div>
 
-      {/* Letter Content - full width for letters */}
-      {documentType === 'letter' && (
-        <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
-          <h2 className="text-xl font-semibold mb-4">Brief-Inhalt</h2>
-          
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Betreff
-              </label>
-              <input
-                type="text"
-                value={letterSubject}
-                onChange={(e) => setLetterSubject(e.target.value)}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Betreff des Briefes..."
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Anrede
-              </label>
-              <input
-                type="text"
-                value={letterGreeting}
-                onChange={(e) => setLetterGreeting(e.target.value)}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Sehr geehrte Damen und Herren,"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Brief-Text
-              </label>
-              <textarea
-                value={letterContent}
-                onChange={(e) => setLetterContent(e.target.value)}
-                className="w-full h-64 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Hier können Sie Ihren Brieftext eingeben...&#10;&#10;Mit freundlichen Grüßen"
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Line Items - only for invoices and quotes */}
       {documentType !== 'letter' && (
         <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
