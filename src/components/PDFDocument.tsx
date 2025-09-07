@@ -1,8 +1,53 @@
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
 import { DocumentData } from '../types/document';
 import { formatCurrency, formatDate } from '../utils/calculations';
 
+// HTML zu PDF Text Konverter
+const convertHTMLToFormattedText = (html: string) => {
+  if (!html) return [];
+  
+  // Einfache HTML-zu-Text Konvertierung mit Formatierung
+  const parts = [];
+  let currentText = '';
+  let currentStyle = {};
+  
+  // Entferne HTML Tags und extrahiere Text mit Formatierung
+  const cleanText = html
+    .replace(/<strong>(.*?)<\/strong>/g, (match, text) => {
+      parts.push({ text: currentText, style: currentStyle });
+      parts.push({ text, style: { ...currentStyle, fontWeight: 'bold' } });
+      currentText = '';
+      return '';
+    })
+    .replace(/<em>(.*?)<\/em>/g, (match, text) => {
+      parts.push({ text: currentText, style: currentStyle });
+      parts.push({ text, style: { ...currentStyle, fontStyle: 'italic' } });
+      currentText = '';
+      return '';
+    })
+    .replace(/<u>(.*?)<\/u>/g, (match, text) => {
+      parts.push({ text: currentText, style: currentStyle });
+      parts.push({ text, style: { ...currentStyle, textDecoration: 'underline' } });
+      currentText = '';
+      return '';
+    })
+    .replace(/<h[1-6]>(.*?)<\/h[1-6]>/g, (match, text) => {
+      parts.push({ text: currentText, style: currentStyle });
+      parts.push({ text: text + '\n', style: { ...currentStyle, fontSize: 12, fontWeight: 'bold' } });
+      currentText = '';
+      return '';
+    })
+    .replace(/<br\s*\/?>/g, '\n')
+    .replace(/<p>(.*?)<\/p>/g, '$1\n')
+    .replace(/<[^>]*>/g, ''); // Entferne alle anderen HTML Tags
+  
+  if (cleanText.trim()) {
+    parts.push({ text: cleanText, style: currentStyle });
+  }
+  
+  return parts.length > 0 ? parts : [{ text: cleanText, style: {} }];
+};
 const styles = StyleSheet.create({
   page: {
     flexDirection: 'column',
@@ -130,6 +175,15 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 4,
   },
+  formattedText: {
+    lineHeight: 1.5,
+  },
+  boldText: {
+    fontWeight: 'bold',
+  },
+  italicText: {
+    fontStyle: 'italic',
+  },
   // Fußzeile mit Pflichtangaben (mindestens 2 cm vom unteren Rand)
   footer: {
     position: 'absolute',
@@ -216,9 +270,17 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({ data }) => {
           {data.type === 'letter' ? (
             <View style={{ marginBottom: 25, fontSize: 10, lineHeight: 1.5 }}>
               <Text>{data.letterGreeting || 'Sehr geehrte Damen und Herren,'}</Text>
-              <Text style={{ marginTop: 10, marginBottom: 10 }}>
-                {data.letterContent || 'Briefinhalt...'}
-              </Text>
+              <View style={{ marginTop: 10, marginBottom: 10 }}>
+                {data.letterContent ? (
+                  convertHTMLToFormattedText(data.letterContent).map((part, index) => (
+                    <Text key={index} style={[styles.formattedText, part.style]}>
+                      {part.text}
+                    </Text>
+                  ))
+                ) : (
+                  <Text>Briefinhalt...</Text>
+                )}
+              </View>
               <Text style={{ marginTop: 15 }}>Mit freundlichen Grüßen</Text>
               <Text style={{ marginTop: 20 }}>{data.company.manager}</Text>
               <Text>{data.company.name}</Text>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Editor } from 'react-draft-wysiwyg';
-import { EditorState, convertToRaw, convertFromRaw, ContentState } from 'draft-js';
+import { EditorState, convertToRaw, convertFromRaw, ContentState, convertFromHTML, convertToHTML } from 'draft-js';
+import { stateToHTML } from 'draft-js-export-html';
 import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
 
 interface RichTextEditorProps {
@@ -31,25 +32,32 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const handleEditorChange = (state: EditorState) => {
     setEditorState(state);
     const contentState = state.getCurrentContent();
-    const rawContent = convertToRaw(contentState);
     
-    // Für einfache Textausgabe im PDF verwenden wir nur den Plain Text
-    const plainText = contentState.getPlainText();
-    onChange(plainText);
+    // Konvertiere zu HTML für PDF-Formatierung
+    const htmlContent = stateToHTML(contentState);
+    onChange(htmlContent);
   };
 
   // Update editor state when value prop changes
   useEffect(() => {
-    if (value !== editorState.getCurrentContent().getPlainText()) {
+    if (value && value !== stateToHTML(editorState.getCurrentContent())) {
       try {
-        const contentState = convertFromRaw(JSON.parse(value));
+        // Versuche HTML zu parsen
+        const blocksFromHTML = convertFromHTML(value);
+        const contentState = ContentState.createFromBlockArray(
+          blocksFromHTML.contentBlocks,
+          blocksFromHTML.entityMap
+        );
         setEditorState(EditorState.createWithContent(contentState));
       } catch {
-        const contentState = ContentState.createFromText(value);
-        setEditorState(EditorState.createWithContent(contentState));
+        // Fallback für Plain Text
+        if (value !== editorState.getCurrentContent().getPlainText()) {
+          const contentState = ContentState.createFromText(value);
+          setEditorState(EditorState.createWithContent(contentState));
+        }
       }
     }
-  }, [value]);
+  }, [value, editorState]);
 
   return (
     <div className="border border-gray-300 rounded-md min-h-64">
