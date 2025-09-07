@@ -35,7 +35,7 @@ export interface Company {
 
 export interface DocumentData {
   id: string;
-  type: 'invoice' | 'quote';
+  type: 'invoice' | 'quote' | 'letter';
   documentNumber: string;
   date: string;
   dueDate?: string;
@@ -48,4 +48,6 @@ export interface DocumentData {
   vatAmount: number;
   total: number;
   createdAt: string;
+  letterSubject?: string;
+  letterContent?: string;
 }

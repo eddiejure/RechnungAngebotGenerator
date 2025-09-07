@@ -153,7 +153,7 @@ interface PDFDocumentProps {
 }
 
 export const PDFDocument: React.FC<PDFDocumentProps> = ({ data }) => {
-  const documentTitle = data.type === 'invoice' ? 'Rechnung' : 'Angebot';
+  const documentTitle = data.type === 'invoice' ? 'Rechnung' : data.type === 'quote' ? 'Angebot' : 'Geschäftsbrief';
   
   // Absenderzeile für Fensterumschlag
   const senderLine = `${data.company.name}, ${data.company.address}, ${data.company.postalCode} ${data.company.city}`;
@@ -192,63 +192,84 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({ data }) => {
         {/* Hauptinhalt */}
         <View style={styles.mainContent}>
           {/* Betreffzeile */}
-          <Text style={styles.documentTitle}>
-            {documentTitle} Nr. {data.documentNumber}
-          </Text>
+          {data.type === 'letter' ? (
+            <Text style={styles.documentTitle}>
+              {data.letterSubject || 'Geschäftsbrief'}
+            </Text>
+          ) : (
+            <Text style={styles.documentTitle}>
+              {documentTitle} Nr. {data.documentNumber}
+            </Text>
+          )}
           
           {/* Dokumentinformationen */}
           <View style={styles.documentInfo}>
             <View>
-              <Text>{documentTitle}sdatum: {formatDate(data.date)}</Text>
+              <Text>{data.type === 'letter' ? 'Datum' : `${documentTitle}sdatum`}: {formatDate(data.date)}</Text>
               {data.type === 'invoice' && data.dueDate && (
                 <Text>Fälligkeitsdatum: {formatDate(data.dueDate)}</Text>
               )}
             </View>
           </View>
 
-          {/* Positionen-Tabelle */}
-          <View style={styles.table}>
-            <View style={styles.tableHeader}>
-              <Text style={styles.col1}>Pos.</Text>
-              <Text style={styles.col2}>Beschreibung</Text>
-              <Text style={styles.col3}>Menge</Text>
-              <Text style={styles.col4}>Einzelpreis</Text>
-              <Text style={styles.col5}>Gesamtpreis</Text>
+          {/* Brief-Inhalt für Freie Briefe */}
+          {data.type === 'letter' ? (
+            <View style={{ marginBottom: 25, fontSize: 10, lineHeight: 1.5 }}>
+              <Text>Sehr geehrte Damen und Herren,</Text>
+              <Text style={{ marginTop: 10, marginBottom: 10 }}>
+                {data.letterContent || 'Briefinhalt...'}
+              </Text>
+              <Text style={{ marginTop: 15 }}>Mit freundlichen Grüßen</Text>
+              <Text style={{ marginTop: 20 }}>{data.company.manager}</Text>
+              <Text>{data.company.name}</Text>
             </View>
-            
-            {data.lineItems.map((item) => (
-              <View key={item.id} style={styles.tableRow}>
-                <Text style={styles.col1}>{item.position}</Text>
-                <Text style={styles.col2}>{item.description}</Text>
-                <Text style={styles.col3}>{item.quantity}</Text>
-                <Text style={styles.col4}>{formatCurrency(item.unitPrice)}</Text>
-                <Text style={styles.col5}>{formatCurrency(item.total)}</Text>
+          ) : (
+            /* Positionen-Tabelle für Rechnungen und Angebote */
+            <View style={styles.table}>
+              <View style={styles.tableHeader}>
+                <Text style={styles.col1}>Pos.</Text>
+                <Text style={styles.col2}>Beschreibung</Text>
+                <Text style={styles.col3}>Menge</Text>
+                <Text style={styles.col4}>Einzelpreis</Text>
+                <Text style={styles.col5}>Gesamtpreis</Text>
               </View>
-            ))}
-          </View>
-
-          {/* Summen */}
-          <View style={styles.totals}>
-            <View style={styles.totalRow}>
-              <Text>Zwischensumme:</Text>
-              <Text>{formatCurrency(data.subtotal)}</Text>
+              
+              {data.lineItems.map((item) => (
+                <View key={item.id} style={styles.tableRow}>
+                  <Text style={styles.col1}>{item.position}</Text>
+                  <Text style={styles.col2}>{item.description}</Text>
+                  <Text style={styles.col3}>{item.quantity}</Text>
+                  <Text style={styles.col4}>{formatCurrency(item.unitPrice)}</Text>
+                  <Text style={styles.col5}>{formatCurrency(item.total)}</Text>
+                </View>
+              ))}
             </View>
-            
-            {!data.isSmallBusiness && (
+          )}
+
+          {/* Summen - nur für Rechnungen und Angebote */}
+          {data.type !== 'letter' && (
+            <View style={styles.totals}>
               <View style={styles.totalRow}>
-                <Text>19% MwSt.:</Text>
-                <Text>{formatCurrency(data.vatAmount)}</Text>
+                <Text>Zwischensumme:</Text>
+                <Text>{formatCurrency(data.subtotal)}</Text>
               </View>
-            )}
-            
-            <View style={styles.totalRowBold}>
-              <Text>Gesamtbetrag:</Text>
-              <Text>{formatCurrency(data.total)}</Text>
+              
+              {!data.isSmallBusiness && (
+                <View style={styles.totalRow}>
+                  <Text>19% MwSt.:</Text>
+                  <Text>{formatCurrency(data.vatAmount)}</Text>
+                </View>
+              )}
+              
+              <View style={styles.totalRowBold}>
+                <Text>Gesamtbetrag:</Text>
+                <Text>{formatCurrency(data.total)}</Text>
+              </View>
             </View>
-          </View>
+          )}
 
-          {/* Kleinunternehmer-Hinweis */}
-          {data.isSmallBusiness && (
+          {/* Kleinunternehmer-Hinweis - nur für Rechnungen und Angebote */}
+          {data.type !== 'letter' && data.isSmallBusiness && (
             <Text style={[styles.smallBusinessNote, { marginBottom: 15, fontSize: 9 }]}>
               Gemäß §19 UStG wird keine Umsatzsteuer berechnet.
             </Text>

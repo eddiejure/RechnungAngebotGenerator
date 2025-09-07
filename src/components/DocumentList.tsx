@@ -60,14 +60,16 @@ export const DocumentList: React.FC<DocumentListProps> = ({
                     <div className={`p-2 rounded-lg ${
                       doc.type === 'invoice' 
                         ? 'bg-blue-100 text-blue-600' 
-                        : 'bg-green-100 text-green-600'
+                        : doc.type === 'quote'
+                        ? 'bg-green-100 text-green-600'
+                        : 'bg-purple-100 text-purple-600'
                     }`}>
                       <FileText size={20} />
                     </div>
                     
                     <div>
                       <h3 className="font-semibold text-gray-900">
-                        {doc.type === 'invoice' ? 'Rechnung' : 'Angebot'} {doc.documentNumber}
+                        {doc.type === 'invoice' ? 'Rechnung' : doc.type === 'quote' ? 'Angebot' : 'Brief'} {doc.documentNumber}
                       </h3>
                       <p className="text-sm text-gray-600">{doc.customer.name}</p>
                     </div>
@@ -79,11 +81,13 @@ export const DocumentList: React.FC<DocumentListProps> = ({
                       {formatDate(doc.date)}
                     </div>
                     
-                    <div className="font-medium text-gray-900">
-                      {formatCurrency(doc.total)}
-                    </div>
+                    {doc.type !== 'letter' && (
+                      <div className="font-medium text-gray-900">
+                        {formatCurrency(doc.total)}
+                      </div>
+                    )}
                     
-                    {doc.isSmallBusiness && (
+                    {doc.type !== 'letter' && doc.isSmallBusiness && (
                       <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">
                         §19 UStG
                       </span>
@@ -102,7 +106,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
                   
                   <PDFDownloadLink
                     document={<PDFDocument data={doc} />}
-                    fileName={`${doc.type === 'invoice' ? 'Rechnung' : 'Angebot'}-${doc.documentNumber}.pdf`}
+                    fileName={`${doc.type === 'invoice' ? 'Rechnung' : doc.type === 'quote' ? 'Angebot' : 'Brief'}-${doc.documentNumber}.pdf`}
                     className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
                     title="PDF herunterladen"
                   >
