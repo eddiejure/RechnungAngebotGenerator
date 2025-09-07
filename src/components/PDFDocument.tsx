@@ -3,50 +3,94 @@ import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/rendere
 import { DocumentData } from '../types/document';
 import { formatCurrency, formatDate } from '../utils/calculations';
 
-// HTML zu PDF Text Konverter
-const convertHTMLToFormattedText = (html: string) => {
+// Verbesserter HTML zu PDF Text Konverter für Tiptap HTML
+const convertHTMLToFormattedText = (html: string): any[] => {
   if (!html) return [];
   
-  // Einfache HTML-zu-Text Konvertierung mit Formatierung
-  const parts = [];
-  let currentText = '';
-  let currentStyle = {};
+  // Erstelle ein temporäres DOM Element für HTML Parsing
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = html;
   
-  // Entferne HTML Tags und extrahiere Text mit Formatierung
-  const cleanText = html
-    .replace(/<strong>(.*?)<\/strong>/g, (match, text) => {
-      parts.push({ text: currentText, style: currentStyle });
-      parts.push({ text, style: { ...currentStyle, fontWeight: 'bold' } });
-      currentText = '';
-      return '';
-    })
-    .replace(/<em>(.*?)<\/em>/g, (match, text) => {
-      parts.push({ text: currentText, style: currentStyle });
-      parts.push({ text, style: { ...currentStyle, fontStyle: 'italic' } });
-      currentText = '';
-      return '';
-    })
-    .replace(/<u>(.*?)<\/u>/g, (match, text) => {
-      parts.push({ text: currentText, style: currentStyle });
-      parts.push({ text, style: { ...currentStyle, textDecoration: 'underline' } });
-      currentText = '';
-      return '';
-    })
-    .replace(/<h[1-6]>(.*?)<\/h[1-6]>/g, (match, text) => {
-      parts.push({ text: currentText, style: currentStyle });
-      parts.push({ text: text + '\n', style: { ...currentStyle, fontSize: 12, fontWeight: 'bold' } });
-      currentText = '';
-      return '';
-    })
-    .replace(/<br\s*\/?>/g, '\n')
-    .replace(/<p>(.*?)<\/p>/g, '$1\n')
-    .replace(/<[^>]*>/g, ''); // Entferne alle anderen HTML Tags
+  const parseNode = (node: Node): any[] => {
+    const result: any[] = [];
+    
+    if (node.nodeType === Node.TEXT_NODE) {
+      const text = node.textContent || '';
+      if (text.trim()) {
+        result.push({ text, style: {} });
+      }
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      const element = node as Element;
+      const tagName = element.tagName.toLowerCase();
+      
+      let style: any = {};
+      let addNewline = false;
+      
+      switch (tagName) {
+        case 'strong':
+        case 'b':
+          style.fontWeight = 'bold';
+          break;
+        case 'em':
+        case 'i':
+          style.fontStyle = 'italic';
+          break;
+        case 'u':
+          style.textDecoration = 'underline';
+          break;
+        case 'h1':
+          style = { fontSize: 14, fontWeight: 'bold' };
+          addNewline = true;
+          break;
+        case 'h2':
+          style = { fontSize: 12, fontWeight: 'bold' };
+          addNewline = true;
+          break;
+        case 'h3':
+          style = { fontSize: 11, fontWeight: 'bold' };
+          addNewline = true;
+          break;
+        case 'p':
+          addNewline = true;
+          break;
+        case 'br':
+          result.push({ text: '\n', style: {} });
+          return result;
+        case 'ul':
+        case 'ol':
+          addNewline = true;
+          break;
+        case 'li':
+          result.push({ text: '• ', style: {} });
+          break;
+      }
+      
+      // Parse child nodes
+      for (let i = 0; i < element.childNodes.length; i++) {
+        const childResults = parseNode(element.childNodes[i]);
+        childResults.forEach(childResult => {
+          result.push({
+            text: childResult.text,
+            style: { ...childResult.style, ...style }
+          });
+        });
+      }
+      
+      if (addNewline && result.length > 0) {
+        result.push({ text: '\n', style: {} });
+      }
+    }
+    
+    return result;
+  };
   
-  if (cleanText.trim()) {
-    parts.push({ text: cleanText, style: currentStyle });
+  try {
+    const parts = parseNode(tempDiv);
+    return parts.length > 0 ? parts : [{ text: html.replace(/<[^>]*>/g, ''), style: {} }];
+  } catch (error) {
+    // Fallback: Entferne HTML Tags und gib Plain Text zurück
+    return [{ text: html.replace(/<[^>]*>/g, ''), style: {} }];
   }
-  
-  return parts.length > 0 ? parts : [{ text: cleanText, style: {} }];
 };
 const styles = StyleSheet.create({
   page: {
