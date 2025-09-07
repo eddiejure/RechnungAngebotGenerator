@@ -39,19 +39,18 @@ const convertHTMLToFormattedText = (html: string): any[] => {
           style.textDecoration = 'underline';
           break;
         case 'h1':
-          style = { fontSize: 14, fontWeight: 'bold', marginBottom: 3 };
+          style = { fontSize: 14, fontWeight: 'bold' };
           addNewline = true;
           break;
         case 'h2':
-          style = { fontSize: 12, fontWeight: 'bold', marginBottom: 2 };
+          style = { fontSize: 12, fontWeight: 'bold' };
           addNewline = true;
           break;
         case 'h3':
-          style = { fontSize: 11, fontWeight: 'bold', marginBottom: 2 };
+          style = { fontSize: 11, fontWeight: 'bold' };
           addNewline = true;
           break;
         case 'p':
-          style.marginBottom = 2;
           addNewline = true;
           break;
         case 'br':
@@ -59,7 +58,6 @@ const convertHTMLToFormattedText = (html: string): any[] => {
           return result;
         case 'ul':
         case 'ol':
-          style.marginBottom = 2;
           addNewline = true;
           break;
         case 'li':
@@ -222,7 +220,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   formattedText: {
-    lineHeight: 1.2,
+    lineHeight: 1.5,
   },
   boldText: {
     fontWeight: 'bold',
@@ -314,12 +312,12 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({ data }) => {
 
           {/* Brief-Inhalt für Freie Briefe */}
           {data.type === 'letter' ? (
-            <View style={{ marginBottom: 25, fontSize: 10, lineHeight: 1.2 }}>
+            <View style={{ marginBottom: 25, fontSize: 10, lineHeight: 1.5 }}>
               <Text>{data.letterGreeting || 'Sehr geehrte Damen und Herren,'}</Text>
-              <View style={{ marginTop: 8, marginBottom: 8 }}>
+              <View style={{ marginTop: 10, marginBottom: 10 }}>
                 {data.letterContent ? (
                   convertHTMLToFormattedText(data.letterContent).map((part, index) => (
-                    <Text key={index} style={[styles.formattedText, part.style, { lineHeight: 1.2 }]}>
+                    <Text key={index} style={[styles.formattedText, part.style]}>
                       {part.text}
                     </Text>
                   ))
@@ -327,8 +325,8 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({ data }) => {
                   <Text>Briefinhalt...</Text>
                 )}
               </View>
-              <Text style={{ marginTop: 12 }}>Mit freundlichen Grüßen</Text>
-              <Text style={{ marginTop: 15 }}>{data.company.manager}</Text>
+              <Text style={{ marginTop: 15 }}>Mit freundlichen Grüßen</Text>
+              <Text style={{ marginTop: 20 }}>{data.company.manager}</Text>
               <Text>{data.company.name}</Text>
             </View>
           ) : (
