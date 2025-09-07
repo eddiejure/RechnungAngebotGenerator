@@ -3,6 +3,7 @@ import { DragDropContext, Droppable, DropResult } from '@hello-pangea/dnd';
 import { Plus, FileText, Download, Eye, Save, Building, Package } from 'lucide-react';
 import { PDFViewer, PDFDownloadLink } from '@react-pdf/renderer';
 import { LineItemForm } from './LineItemForm';
+import { RichTextEditor } from './RichTextEditor';
 import { PDFDocument } from './PDFDocument';
 import { DocumentData, LineItem, Customer, Company } from '../types/document';
 import { LineItemTemplate, CompanyTemplate } from '../types/template';
@@ -611,10 +612,9 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({ initialData, onSave 
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Brief-Text
               </label>
-              <textarea
+              <RichTextEditor
                 value={letterContent}
                 onChange={(e) => setLetterContent(e.target.value)}
-                className="w-full h-64 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Hier können Sie den Inhalt Ihres Briefes eingeben..."
               />
             </div>
