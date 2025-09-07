@@ -614,7 +614,7 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({ initialData, onSave 
               </label>
               <RichTextEditor
                 value={letterContent}
-                onChange={(e) => setLetterContent(e.target.value)}
+                onChange={(value) => setLetterContent(value)}
                 placeholder="Hier können Sie den Inhalt Ihres Briefes eingeben..."
               />
             </div>
