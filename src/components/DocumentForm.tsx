@@ -700,7 +700,7 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({ initialData, onSave 
         <div className="mt-8">
           <div className="bg-white rounded-lg shadow-sm border p-6">
             <h2 className="text-xl font-semibold mb-4">PDF Vorschau</h2>
-            <div className="h-96 border border-gray-300 rounded-lg overflow-hidden">
+            <div className="h-[80vh] min-h-[600px] border border-gray-300 rounded-lg overflow-hidden">
               <PDFViewer
                 width="100%"
                 height="100%"
