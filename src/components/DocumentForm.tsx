@@ -216,6 +216,53 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({ initialData, onSave 
             <h2 className="text-xl font-semibold">Dokument-Einstellungen</h2>
           </div>
           
+          {/* Quick Document Type Buttons */}
+          <div className="mb-6 p-4 bg-gray-50 rounded-lg border">
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              Dokumenttyp auswählen
+            </label>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setDocumentType('invoice')}
+                className={`flex items-center gap-2 px-4 py-3 rounded-lg font-medium transition-all ${
+                  documentType === 'invoice'
+                    ? 'bg-blue-600 text-white shadow-md transform scale-105'
+                    : 'bg-blue-100 text-blue-700 hover:bg-blue-200 hover:shadow-sm'
+                }`}
+              >
+                <FileText size={20} />
+                <span>Rechnung</span>
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => setDocumentType('quote')}
+                className={`flex items-center gap-2 px-4 py-3 rounded-lg font-medium transition-all ${
+                  documentType === 'quote'
+                    ? 'bg-green-600 text-white shadow-md transform scale-105'
+                    : 'bg-green-100 text-green-700 hover:bg-green-200 hover:shadow-sm'
+                }`}
+              >
+                <FileText size={20} />
+                <span>Angebot</span>
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => setDocumentType('letter')}
+                className={`flex items-center gap-2 px-4 py-3 rounded-lg font-medium transition-all ${
+                  documentType === 'letter'
+                    ? 'bg-purple-600 text-white shadow-md transform scale-105'
+                    : 'bg-purple-100 text-purple-700 hover:bg-purple-200 hover:shadow-sm'
+                }`}
+              >
+                <FileText size={20} />
+                <span>Freier Brief</span>
+              </button>
+            </div>
+          </div>
+          
           {/* Company Template Selection */}
           {companyTemplates.length > 0 && !initialData && (
             <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
@@ -243,21 +290,6 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({ initialData, onSave 
           )}
           
           <div className="grid grid-cols-2 gap-4 mb-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Dokumenttyp
-              </label>
-              <select
-                value={documentType}
-                onChange={(e) => setDocumentType(e.target.value as 'invoice' | 'quote')}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="invoice">Rechnung</option>
-                <option value="quote">Angebot</option>
-                <option value="letter">Freier Brief</option>
-              </select>
-            </div>
-            
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Dokumentnummer
