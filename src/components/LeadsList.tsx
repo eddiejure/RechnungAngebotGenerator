@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { UserPlus, Edit, Trash2, Phone, Mail, Calendar, Target, Plus } from 'lucide-react';
+import { UserPlus, Edit, Trash2, Phone, Mail, Calendar, Target, Plus, Users } from 'lucide-react';
 import { Lead } from '../types/crm';
-import { getLeads, deleteLead } from '../utils/crmStorage';
+import { getLeads, deleteLead, saveCustomer, getCustomers } from '../utils/crmStorage';
+import { Customer } from '../types/crm';
 import { formatCurrency, formatDate } from '../utils/calculations';
 
 interface LeadsListProps {
@@ -28,6 +29,58 @@ export const LeadsList: React.FC<LeadsListProps> = ({ onEdit, onCreateNew, onRef
       deleteLead(id);
       loadLeads();
       onRefresh();
+    }
+  };
+
+  const handleConvertToCustomer = (lead: Lead) => {
+    if (window.confirm(`Möchten Sie den Lead "${lead.name}" in einen Kunden konvertieren?`)) {
+      // Check if customer with same email already exists
+      const existingCustomers = getCustomers();
+      const existingCustomer = existingCustomers.find(c => c.email === lead.email);
+      
+      if (existingCustomer) {
+        alert('Ein Kunde mit dieser E-Mail-Adresse existiert bereits.');
+        return;
+      }
+      
+      // Create new customer from lead data
+      const newCustomer: Customer = {
+        id: `customer-${Date.now()}`,
+        name: lead.name,
+        company: lead.company,
+        email: lead.email,
+        phone: lead.phone,
+        address: '',
+        city: '',
+        postalCode: '',
+        country: 'Deutschland',
+        website: '',
+        industry: '',
+        contactPerson: lead.name,
+        notes: `Konvertiert von Lead am ${formatDate(new Date().toISOString())}.\n\nUrsprüngliche Lead-Notizen:\n${lead.notes}`,
+        createdAt: new Date().toISOString(),
+        totalProjects: 0,
+        totalRevenue: lead.estimatedValue || 0,
+        lastProject: undefined,
+      };
+      
+      // Save customer
+      saveCustomer(newCustomer);
+      
+      // Update lead status to "Gewonnen"
+      const updatedLead: Lead = {
+        ...lead,
+        status: 'Gewonnen',
+        notes: lead.notes + `\n\nKonvertiert zu Kunde am ${formatDate(new Date().toISOString())}`
+      };
+      
+      // Save updated lead (you'll need to import saveLead)
+      import('../utils/crmStorage').then(({ saveLead }) => {
+        saveLead(updatedLead);
+        loadLeads();
+        onRefresh();
+        alert(`Lead "${lead.name}" wurde erfolgreich zu einem Kunden konvertiert!`);
+      });
     }
   };
 
@@ -182,6 +235,16 @@ export const LeadsList: React.FC<LeadsListProps> = ({ onEdit, onCreateNew, onRef
                 >
                   <Edit size={16} />
                 </button>
+                
+                {!['Gewonnen', 'Verloren'].includes(lead.status) && (
+                  <button
+                    onClick={() => handleConvertToCustomer(lead)}
+                    className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-md transition-colors"
+                    title="Zu Kunde konvertieren"
+                  >
+                    <Users size={16} />
+                  </button>
+                )}
                 
                 <button
                   onClick={() => handleDelete(lead.id)}
