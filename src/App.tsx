@@ -14,29 +14,36 @@ import { LeadsList } from './components/LeadsList';
 import { LeadForm } from './components/LeadForm';
 import { CustomersList } from './components/CustomersList';
 import { CustomerForm } from './components/CustomerForm';
+import { ProjectsList } from './components/ProjectsList';
+import { ProjectForm } from './components/ProjectForm';
+import { ProjectDetails } from './components/ProjectDetails';
 import { DocumentForm } from './components/DocumentForm';
 import { DocumentList } from './components/DocumentList';
 import { TemplateManager } from './components/TemplateManager';
 import { DocumentData } from './types/document';
-import { Lead, Customer } from './types/crm';
+import { Lead, Customer, Project } from './types/crm';
 import { getDocuments } from './utils/storage';
-import { getLeads, getCustomers } from './utils/crmStorage';
+import { getLeads, getCustomers, getProjects } from './utils/crmStorage';
 
-type View = 'dashboard' | 'leads' | 'customers' | 'projects' | 'documents' | 'create-lead' | 'edit-lead' | 'create-customer' | 'edit-customer' | 'create-document' | 'edit-document' | 'templates';
+type View = 'dashboard' | 'leads' | 'customers' | 'projects' | 'documents' | 'create-lead' | 'edit-lead' | 'create-customer' | 'edit-customer' | 'create-project' | 'edit-project' | 'view-project' | 'create-document' | 'edit-document' | 'templates';
 
 function App() {
   const [currentView, setCurrentView] = useState<View>('dashboard');
   const [documents, setDocuments] = useState<DocumentData[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [editingDocument, setEditingDocument] = useState<DocumentData | null>(null);
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [viewingProject, setViewingProject] = useState<Project | null>(null);
 
   useEffect(() => {
     loadDocuments();
     loadLeads();
     loadCustomers();
+    loadProjects();
   }, []);
 
   const loadDocuments = () => {
@@ -49,6 +56,10 @@ function App() {
 
   const loadCustomers = () => {
     setCustomers(getCustomers());
+  };
+
+  const loadProjects = () => {
+    setProjects(getProjects());
   };
 
   const handleCreateNew = () => {
@@ -100,11 +111,34 @@ function App() {
     setEditingCustomer(null);
   };
 
+  const handleCreateNewProject = () => {
+    setEditingProject(null);
+    setCurrentView('create-project');
+  };
+
+  const handleEditProject = (project: Project) => {
+    setEditingProject(project);
+    setCurrentView('edit-project');
+  };
+
+  const handleViewProject = (project: Project) => {
+    setViewingProject(project);
+    setCurrentView('view-project');
+  };
+
+  const handleSaveProject = () => {
+    loadProjects();
+    setCurrentView('projects');
+    setEditingProject(null);
+  };
+
   const handleBackToDashboard = () => {
     setCurrentView('dashboard');
     setEditingDocument(null);
     setEditingLead(null);
     setEditingCustomer(null);
+    setEditingProject(null);
+    setViewingProject(null);
   };
 
   const getPageTitle = () => {
@@ -168,6 +202,16 @@ function App() {
                 </button>
               )}
               
+              {currentView === 'projects' && (
+                <button
+                  onClick={handleCreateNewProject}
+                  className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
+                >
+                  <Briefcase size={18} />
+                  Neues Projekt
+                </button>
+              )}
+              
               {currentView === 'documents' && (
                 <button
                   onClick={handleCreateNew}
@@ -178,7 +222,7 @@ function App() {
                 </button>
               )}
               
-              {['templates', 'create-lead', 'edit-lead', 'create-customer', 'edit-customer', 'create-document', 'edit-document'].includes(currentView) && (
+              {['templates', 'create-lead', 'edit-lead', 'create-customer', 'edit-customer', 'create-project', 'edit-project', 'view-project', 'create-document', 'edit-document'].includes(currentView) && (
                 <button
                   onClick={handleBackToDashboard}
                   className="flex items-center gap-2 text-gray-600 hover:text-gray-800 px-4 py-2 rounded-md hover:bg-gray-100 transition-colors"
@@ -245,13 +289,18 @@ function App() {
             <button
               onClick={() => setCurrentView('projects')}
               className={`flex items-center gap-2 px-3 py-4 text-sm font-medium border-b-2 transition-colors ${
-                currentView === 'projects'
+                currentView === 'projects' || currentView === 'create-project' || currentView === 'edit-project' || currentView === 'view-project'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
               <Briefcase size={18} />
               Projekte
+              {projects.length > 0 && (
+                <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">
+                  {projects.length}
+                </span>
+              )}
             </button>
             
             <button
@@ -302,15 +351,12 @@ function App() {
         )}
         
         {currentView === 'projects' && (
-          <div className="bg-white rounded-lg shadow-sm border p-12 text-center">
-            <Briefcase size={64} className="mx-auto mb-4 text-gray-300" />
-            <h3 className="text-xl font-medium text-gray-900 mb-2">
-              Projekt-Verwaltung
-            </h3>
-            <p className="text-gray-600">
-              Diese Funktion wird in Kürze verfügbar sein
-            </p>
-          </div>
+          <ProjectsList
+            onEdit={handleEditProject}
+            onCreateNew={handleCreateNewProject}
+            onRefresh={loadProjects}
+            onViewDetails={handleViewProject}
+          />
         )}
         
         {currentView === 'documents' && (
@@ -348,6 +394,37 @@ function App() {
             initialData={editingCustomer}
             onSave={handleSaveCustomer}
             onCancel={() => setCurrentView('customers')}
+          />
+        )}
+        
+        {currentView === 'create-project' && (
+          <ProjectForm
+            onSave={handleSaveProject}
+            onCancel={() => setCurrentView('projects')}
+          />
+        )}
+        
+        {currentView === 'edit-project' && (
+          <ProjectForm
+            initialData={editingProject}
+            onSave={handleSaveProject}
+            onCancel={() => setCurrentView('projects')}
+          />
+        )}
+        
+        {currentView === 'view-project' && viewingProject && (
+          <ProjectDetails
+            project={viewingProject}
+            onEdit={handleEditProject}
+            onBack={() => setCurrentView('projects')}
+            onRefresh={() => {
+              loadProjects();
+              // Update the viewing project with fresh data
+              const updatedProject = getProjects().find(p => p.id === viewingProject.id);
+              if (updatedProject) {
+                setViewingProject(updatedProject);
+              }
+            }}
           />
         )}
         

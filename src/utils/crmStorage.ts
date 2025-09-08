@@ -86,6 +86,10 @@ export const getProjectsByCustomer = (customerId: string): Project[] => {
   return getProjects().filter(p => p.customerId === customerId);
 };
 
+export const getProjectsCount = (): number => {
+  return getProjects().length;
+};
+
 // Tasks
 export const saveTasks = (tasks: ProjectTask[]): void => {
   localStorage.setItem(TASKS_KEY, JSON.stringify(tasks));

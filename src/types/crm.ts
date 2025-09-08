@@ -40,9 +40,12 @@ export interface Project {
   name: string;
   customerId: string;
   customerName: string;
-  type: 'Website' | 'E-Commerce' | 'Landing Page' | 'Redesign' | 'Wartung' | 'SEO' | 'Branding' | 'App';
+  type: 'Website' | 'E-Commerce' | 'Landing Page' | 'Redesign' | 'Wartung' | 'SEO' | 'Branding' | 'App' | 'Corporate Website' | 'Portfolio' | 'Blog';
   status: 'Geplant' | 'In Bearbeitung' | 'Review' | 'Abgeschlossen' | 'Pausiert' | 'Storniert';
   priority: 'Niedrig' | 'Mittel' | 'Hoch' | 'Dringend';
+  paymentType: 'Einmalzahlung' | 'Monatliches Abo' | 'Jährliches Abo';
+  monthlyPrice?: number;
+  setupFee?: number;
   startDate: string;
   endDate?: string;
   deadline?: string;
@@ -50,8 +53,40 @@ export interface Project {
   description: string;
   technologies: string[];
   progress: number; // 0-100
+  domain?: string;
+  hostingProvider?: string;
+  launchDate?: string;
+  maintenanceIncluded: boolean;
+  seoIncluded: boolean;
+  contentManagement: boolean;
+  responsiveDesign: boolean;
+  documents: ProjectDocument[];
+  phases: ProjectPhase[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ProjectDocument {
+  id: string;
+  name: string;
+  type: 'Angebot' | 'Rechnung' | 'Vertrag' | 'Briefing' | 'Design' | 'Sonstiges';
+  documentId?: string; // Reference to DocumentData if created in app
+  url?: string;
+  uploadedAt: string;
+  size?: number;
+  notes?: string;
+}
+
+export interface ProjectPhase {
+  id: string;
+  name: string;
+  description: string;
+  status: 'Geplant' | 'In Bearbeitung' | 'Abgeschlossen' | 'Übersprungen';
+  startDate?: string;
+  endDate?: string;
+  estimatedHours?: number;
+  actualHours?: number;
+  order: number;
 }
 
 export interface ProjectTask {
