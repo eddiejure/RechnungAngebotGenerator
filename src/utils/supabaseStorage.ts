@@ -556,10 +556,10 @@ export const getSupabaseProjectTypeTemplates = async (): Promise<ProjectTypeTemp
   
   try {
     const { data, error } = await supabase
-      .from('project_type_templates')
+      .from('public.project_type_templates')
       .select(`
         *,
-        project_phase_templates (*)
+        public.project_phase_templates (*)
       `)
       .eq('user_id', userId)
       .eq('is_active', true)
@@ -572,7 +572,7 @@ export const getSupabaseProjectTypeTemplates = async (): Promise<ProjectTypeTemp
       name: template.name,
       description: template.description,
       category: template.category as ProjectTypeTemplate['category'],
-      defaultPhases: (template.project_phase_templates as any[])
+      defaultPhases: (template['public.project_phase_templates'] as any[])
         .sort((a, b) => a.order_index - b.order_index)
         .map(phase => ({
           id: phase.id,
@@ -623,14 +623,14 @@ export const saveSupabaseProjectTypeTemplate = async (template: ProjectTypeTempl
     };
 
     const { error: templateError } = await supabase
-      .from('project_type_templates')
+      .from('public.project_type_templates')
       .upsert(templateData);
 
     if (templateError) throw templateError;
 
     // Delete existing phases for this template
     await supabase
-      .from('project_phase_templates')
+      .from('public.project_phase_templates')
       .delete()
       .eq('project_type_template_id', template.id);
 
@@ -651,7 +651,7 @@ export const saveSupabaseProjectTypeTemplate = async (template: ProjectTypeTempl
       }));
 
       const { error: phasesError } = await supabase
-        .from('project_phase_templates')
+        .from('public.project_phase_templates')
         .upsert(phasesData);
 
       if (phasesError) throw phasesError;
@@ -667,7 +667,7 @@ export const deleteSupabaseProjectTypeTemplate = async (id: string): Promise<voi
   
   try {
     const { error } = await supabase
-      .from('project_type_templates')
+      .from('public.project_type_templates')
       .update({ is_active: false })
       .eq('id', id)
       .eq('user_id', userId);
@@ -685,7 +685,7 @@ export const getSupabaseProjectPhaseTemplates = async (): Promise<ProjectPhaseTe
   
   try {
     const { data, error } = await supabase
-      .from('project_phase_templates')
+      .from('public.project_phase_templates')
       .select('*')
       .eq('user_id', userId)
       .is('project_type_template_id', null) // Only standalone phases
@@ -735,7 +735,7 @@ export const saveSupabaseProjectPhaseTemplate = async (phase: ProjectPhaseTempla
     };
 
     const { error } = await supabase
-      .from('project_phase_templates')
+      .from('public.project_phase_templates')
       .upsert(phaseData);
 
     if (error) throw error;
@@ -750,7 +750,7 @@ export const deleteSupabaseProjectPhaseTemplate = async (id: string): Promise<vo
   
   try {
     const { error } = await supabase
-      .from('project_phase_templates')
+      .from('public.project_phase_templates')
       .delete()
       .eq('id', id)
       .eq('user_id', userId);
