@@ -207,9 +207,7 @@ export const ProjectDetails: React.FC<ProjectDetailsProps> = ({
                         project.progress === value
                           ? 'bg-blue-600 text-white'
                           : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  {availableDocuments
-                    .filter(doc => !project.documents.some(pd => pd.documentId === doc.id))
-                    .map((doc) => (
+                      }`}
                     >
                       {value}%
                     </button>
@@ -315,11 +313,13 @@ export const ProjectDetails: React.FC<ProjectDetailsProps> = ({
                     className="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="">Dokument auswählen</option>
-                    {availableDocuments.map((doc) => (
-                      <option key={doc.id} value={doc.id}>
-                        {doc.type === 'invoice' ? 'Rechnung' : doc.type === 'quote' ? 'Angebot' : 'Brief'} {doc.documentNumber} - {formatDate(doc.date)}
-                      </option>
-                    ))}
+                    {availableDocuments
+                      .filter(doc => !project.documents.some(pd => pd.documentId === doc.id))
+                      .map((doc) => (
+                        <option key={doc.id} value={doc.id}>
+                          {doc.type === 'invoice' ? 'Rechnung' : doc.type === 'quote' ? 'Angebot' : 'Brief'} {doc.documentNumber} - {formatDate(doc.date)}
+                        </option>
+                      ))}
                   </select>
                   <button
                     onClick={addDocumentToProject}
