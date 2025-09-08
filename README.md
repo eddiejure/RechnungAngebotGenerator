@@ -1,6 +1,6 @@
 # Webdesign CRM - Professional Customer & Project Management
 
-A comprehensive CRM system specifically designed for web design agencies and freelancers. Built with React, TypeScript, Tailwind CSS, and Supabase for real-time data synchronization.
+A comprehensive CRM system specifically designed for web design agencies and freelancers. Built with React, TypeScript, Tailwind CSS, and Supabase for real-time data synchronization with advanced project template management.
 
 ## 🚀 Features
 
@@ -10,7 +10,8 @@ A comprehensive CRM system specifically designed for web design agencies and fre
 - **Customer Management** - Complete customer database with contact information
 - **Project Management** - Comprehensive project tracking with phases and progress
 - **Document Creation** - Professional invoices, quotes, and business letters
-- **Template System** - Reusable company and line item templates
+- **Template System** - Reusable company, line item, and project type templates
+- **Project Templates** - Pre-configured project types with phases, pricing, and features
 
 ### Key Capabilities
 - **Real-time Synchronization** - All data synced across devices via Supabase
@@ -19,6 +20,9 @@ A comprehensive CRM system specifically designed for web design agencies and fre
 - **Payment Models** - Support for one-time payments and subscription-based projects
 - **PDF Generation** - Professional German-compliant documents
 - **Multi-user Authentication** - Secure user accounts with row-level security
+- **Project Automation** - Quick project creation using pre-built templates
+- **Phase Management** - Structured project phases with dependencies and deliverables
+- **Template Categories** - Organized templates by Web, Design, Marketing, Service categories
 
 ## 🏗️ Architecture
 
@@ -52,7 +56,9 @@ src/
 │   ├── DocumentForm.tsx  # Document creation
 │   ├── DocumentList.tsx  # Document overview
 │   ├── PDFDocument.tsx   # PDF generation
-│   └── TemplateManager.tsx# Template management
+│   ├── TemplateManager.tsx# Template management
+│   ├── LineItemForm.tsx  # Line item editing
+│   └── RichTextEditor.tsx# Rich text editing for letters
 ├── lib/
 │   └── supabase.ts       # Supabase client configuration
 ├── types/
@@ -78,6 +84,8 @@ src/
 - **project_documents** - Links between projects and documents
 - **company_templates** - Reusable company information
 - **line_item_templates** - Reusable service items
+- **project_type_templates** - Pre-configured project types with settings
+- **project_phase_templates** - Reusable project phases with dependencies
 
 ### Security
 - **Row Level Security (RLS)** enabled on all tables
@@ -139,7 +147,15 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 2. **Define Phases** - Break project into manageable phases
 3. **Track Progress** - Update completion percentage
 4. **Manage Documents** - Link invoices and quotes to projects
+5. **Use Templates** - Quick setup with pre-configured project types
+6. **Phase Dependencies** - Structured workflow with phase relationships
 
+### Template Management
+1. **Project Type Templates** - Create reusable project configurations
+2. **Phase Templates** - Define standard project phases
+3. **Quick Project Creation** - Select template and auto-populate project data
+4. **Category Organization** - Organize templates by Web, Design, Marketing, etc.
+5. **Feature Presets** - Pre-configure responsive design, SEO, CMS options
 ### Document Creation
 1. **Choose Type** - Invoice, quote, or business letter
 2. **Select Customer** - Use CRM data or enter manually
@@ -153,6 +169,13 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 - **Conflict Resolution** - Automatic handling of concurrent edits
 - **Offline Support** - Basic functionality when offline
 
+### Template System
+- **Project Type Templates** - Pre-configured project setups with phases
+- **Phase Templates** - Reusable project phases with estimated hours
+- **Feature Presets** - Standard configurations for common project types
+- **Category Management** - Organized by Web, Design, Marketing, Service
+- **Dependency Tracking** - Phase dependencies and deliverables
+- **Time Estimation** - Built-in duration and effort estimates
 ### PDF Generation
 - **German Compliance** - Proper formatting for German business documents
 - **Professional Layout** - Clean, modern design
@@ -171,6 +194,12 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 - **Annual Subscription** - Long-term service agreements
 - **Setup Fees** - Initial costs for subscription projects
 
+### Project Template Categories
+- **Web Development** - Websites, E-Commerce, Landing Pages, Apps
+- **Design Services** - Logo Design, Branding, Print Media
+- **Marketing Services** - SEO, Social Media, Content Marketing
+- **Service Offerings** - Consulting, Maintenance, Hosting, Domains
+- **Custom Categories** - User-defined project types and configurations
 ### Document Types
 - **Invoices** - Final billing with due dates
 - **Quotes** - Project estimates and proposals  
@@ -183,6 +212,14 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 - **Content Integration** - Content management and optimization
 - **Testing & QA** - Quality assurance and bug fixes
 - **Launch** - Go-live and deployment
+
+### Template-Based Project Creation
+1. **Select Template** - Choose from pre-configured project types
+2. **Auto-Population** - Project details, phases, and settings filled automatically
+3. **Customization** - Modify template data to match specific requirements
+4. **Phase Dependencies** - Automatic phase ordering and dependency management
+5. **Time Estimation** - Built-in duration and effort calculations
+6. **Feature Configuration** - Pre-set responsive design, SEO, CMS options
 
 ## 🔍 Troubleshooting
 
@@ -204,11 +241,17 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 - **Advanced Reporting** - Business analytics and insights
 - **API Integration** - Connect with external tools
 - **Mobile App** - Native mobile application
+- **Template Marketplace** - Share and import community templates
+- **Advanced Dependencies** - Complex phase relationships and conditions
+- **Resource Planning** - Team member assignment and capacity planning
+- **Template Versioning** - Track and manage template changes over time
 
 ### Scalability
 - **Multi-tenant Architecture** - Support for agencies with multiple clients
 - **Advanced Permissions** - Role-based access control
 - **Backup & Recovery** - Automated data backup solutions
+- **Template Sharing** - Cross-organization template sharing
+- **Bulk Operations** - Mass project creation from templates
 
 ## 🤝 Contributing
 
