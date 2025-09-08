@@ -76,7 +76,7 @@ export const LeadsList: React.FC<LeadsListProps> = ({ onEdit, onCreateNew, onRef
         
         // Create new customer from lead data
         const newCustomer: Customer = {
-          id: `customer-${Date.now()}`,
+          id: crypto.randomUUID(),
           name: lead.name,
           company: lead.company,
           email: lead.email,
