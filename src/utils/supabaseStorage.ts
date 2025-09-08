@@ -596,8 +596,12 @@ export const getSupabaseProjectTypeTemplates = async (): Promise<ProjectTypeTemp
       updatedAt: template.updated_at,
     }));
   } catch (error) {
-    console.error('Error loading project type templates:', error);
-    return [];
+    // If tables don't exist yet, return empty array
+    if (error && (error as any).code === 'PGRST116') {
+      console.warn('Project type templates table not found, returning empty array');
+      return [];
+    }
+    throw error;
   }
 };
 
@@ -703,8 +707,12 @@ export const getSupabaseProjectPhaseTemplates = async (): Promise<ProjectPhaseTe
       updatedAt: phase.updated_at,
     }));
   } catch (error) {
-    console.error('Error loading project phase templates:', error);
-    return [];
+    // If tables don't exist yet, return empty array
+    if (error && (error as any).code === 'PGRST116') {
+      console.warn('Project phase templates table not found, returning empty array');
+      return [];
+    }
+    throw error;
   }
 };
 
