@@ -218,9 +218,9 @@ function App() {
             >
               <UserPlus size={18} />
               Leads
-              {leads.filter(l => l.status === 'Neu').length > 0 && (
+              {leads.length > 0 && (
                 <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">
-                  {leads.filter(l => l.status === 'Neu').length}
+                  {leads.length}
                 </span>
               )}
             </button>
