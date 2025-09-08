@@ -477,7 +477,7 @@ function App() {
             project={viewingProject}
             onEdit={handleEditProject}
             onBack={() => setCurrentView('projects')}
-            onRefresh={() => {
+            onRefresh={async () => {
               await loadProjects();
               // Update the viewing project with fresh data
               const updatedProjects = await getSupabaseProjects();
