@@ -1,4 +1,5 @@
 import React from 'react';
+import React, { useState } from 'react';
 import { FileText, Download, Edit, Trash2, Calendar } from 'lucide-react';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import { DocumentData } from '../types/document';
@@ -17,17 +18,33 @@ export const DocumentList: React.FC<DocumentListProps> = ({
   onEdit,
   onRefresh,
 }) => {
+  const [loading, setLoading] = useState(false);
+
   const handleDelete = async (id: string) => {
     if (window.confirm('Sind Sie sicher, dass Sie dieses Dokument löschen möchten?')) {
+      setLoading(true);
       try {
         await deleteSupabaseDocument(id);
         onRefresh();
       } catch (error) {
         console.error('Error deleting document:', error);
         alert('Fehler beim Löschen des Dokuments. Bitte versuchen Sie es erneut.');
+      } finally {
+        setLoading(false);
       }
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <p className="text-gray-600 text-sm">Dokumente werden aktualisiert...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (documents.length === 0) {
     return (

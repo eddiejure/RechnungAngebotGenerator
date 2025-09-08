@@ -14,19 +14,34 @@ export const CustomersList: React.FC<CustomersListProps> = ({ onEdit, onCreateNe
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [filter, setFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'name' | 'created' | 'revenue' | 'projects'>('created');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadCustomers();
   }, []);
 
   const loadCustomers = async () => {
+    setLoading(true);
     try {
       const data = await getSupabaseCustomers();
       setCustomers(data);
     } catch (error) {
       console.error('Error loading customers:', error);
+    } finally {
+      setLoading(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <p className="text-gray-600 text-sm">Kunden werden geladen...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleDelete = async (id: string) => {
     if (window.confirm('Sind Sie sicher, dass Sie diesen Kunden löschen möchten?')) {

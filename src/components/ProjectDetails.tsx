@@ -43,6 +43,7 @@ export const ProjectDetails: React.FC<ProjectDetailsProps> = ({
   const [selectedDocumentId, setSelectedDocumentId] = useState('');
   const [previewDocument, setPreviewDocument] = useState<DocumentData | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadCustomer();
@@ -50,14 +51,43 @@ export const ProjectDetails: React.FC<ProjectDetailsProps> = ({
   }, [project.customerId]);
 
   const loadCustomer = async () => {
+    setLoading(true);
     try {
       const customers = await getSupabaseCustomers();
       const customerData = customers.find(c => c.id === project.customerId);
       setCustomer(customerData || null);
     } catch (error) {
       console.error('Error loading customer:', error);
+    } finally {
+      setLoading(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="max-w-6xl mx-auto">
+        <div className="mb-8">
+          <button
+            onClick={onBack}
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-800 mb-4"
+          >
+            <ArrowLeft size={20} />
+            Zurück zur Projektübersicht
+          </button>
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-1/3 mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+          </div>
+        </div>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="flex flex-col items-center gap-4">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <p className="text-gray-600 text-sm">Projektdetails werden geladen...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const loadAvailableDocuments = async () => {
     try {

@@ -34,6 +34,7 @@ export const TemplateManager: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'company' | 'items'>('company');
   const [companyTemplates, setCompanyTemplates] = useState<CompanyTemplate[]>([]);
   const [lineItemTemplates, setLineItemTemplates] = useState<LineItemTemplate[]>([]);
+  const [loading, setLoading] = useState(true);
   
   // Company form state
   const [companyForm, setCompanyForm] = useState<Company>(defaultCompany);
@@ -54,6 +55,7 @@ export const TemplateManager: React.FC = () => {
   }, []);
 
   const loadTemplates = async () => {
+    setLoading(true);
     try {
       const [companyTemplates, lineItemTemplates] = await Promise.all([
         getSupabaseCompanyTemplates(),
@@ -63,8 +65,31 @@ export const TemplateManager: React.FC = () => {
       setLineItemTemplates(lineItemTemplates);
     } catch (error) {
       console.error('Error loading templates:', error);
+    } finally {
+      setLoading(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="max-w-6xl mx-auto p-6">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Vorlagen verwalten
+          </h1>
+          <p className="text-gray-600">
+            Speichern Sie Ihre Firmendaten und häufig verwendete Positionen als Vorlagen
+          </p>
+        </div>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="flex flex-col items-center gap-4">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <p className="text-gray-600 text-sm">Vorlagen werden geladen...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleSaveCompanyTemplate = async () => {
     if (!companyTemplateName.trim()) {

@@ -20,19 +20,34 @@ export const LeadsList: React.FC<LeadsListProps> = ({ onEdit, onCreateNew, onRef
   const [leads, setLeads] = useState<Lead[]>([]);
   const [filter, setFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'name' | 'created' | 'value' | 'priority'>('created');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadLeads();
   }, []);
 
   const loadLeads = async () => {
+    setLoading(true);
     try {
       const data = await getSupabaseLeads();
       setLeads(data);
     } catch (error) {
       console.error('Error loading leads:', error);
+    } finally {
+      setLoading(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <p className="text-gray-600 text-sm">Leads werden geladen...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleDelete = async (id: string) => {
     if (window.confirm('Sind Sie sicher, dass Sie diesen Lead löschen möchten?')) {

@@ -19,12 +19,14 @@ export const Dashboard: React.FC = () => {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadDashboardData();
   }, []);
 
   const loadDashboardData = async () => {
+    setLoading(true);
     try {
       const [leadsData, customersData, projectsData] = await Promise.all([
         getSupabaseLeads(),
@@ -36,8 +38,21 @@ export const Dashboard: React.FC = () => {
       setProjects(projectsData);
     } catch (error) {
       console.error('Error loading dashboard data:', error);
+    } finally {
+      setLoading(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <p className="text-gray-600 text-sm">Dashboard wird geladen...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Statistics
   const activeProjects = projects.filter(p => p.status === 'In Bearbeitung').length;

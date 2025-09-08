@@ -22,6 +22,7 @@ export const ProjectsList: React.FC<ProjectsListProps> = ({
   const [filter, setFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'name' | 'created' | 'deadline' | 'budget' | 'progress'>('created');
   const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadProjects();
@@ -29,11 +30,14 @@ export const ProjectsList: React.FC<ProjectsListProps> = ({
   }, []);
 
   const loadProjects = async () => {
+    setLoading(true);
     try {
       const data = await getSupabaseProjects();
       setProjects(data);
     } catch (error) {
       console.error('Error loading projects:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -45,6 +49,17 @@ export const ProjectsList: React.FC<ProjectsListProps> = ({
       console.error('Error loading customers:', error);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <p className="text-gray-600 text-sm">Projekte werden geladen...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleDelete = async (id: string) => {
     if (window.confirm('Sind Sie sicher, dass Sie dieses Projekt löschen möchten?')) {
