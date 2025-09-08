@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Edit, Trash2, Phone, Mail, MapPin, Plus, Building, Euro, Calendar } from 'lucide-react';
 import { Customer } from '../types/crm';
-import { getCustomers, deleteCustomer } from '../utils/crmStorage';
+import { getSupabaseCustomers, deleteSupabaseCustomer } from '../utils/supabaseStorage';
 import { formatCurrency, formatDate } from '../utils/calculations';
 
 interface CustomersListProps {
@@ -19,15 +19,25 @@ export const CustomersList: React.FC<CustomersListProps> = ({ onEdit, onCreateNe
     loadCustomers();
   }, []);
 
-  const loadCustomers = () => {
-    setCustomers(getCustomers());
+  const loadCustomers = async () => {
+    try {
+      const data = await getSupabaseCustomers();
+      setCustomers(data);
+    } catch (error) {
+      console.error('Error loading customers:', error);
+    }
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm('Sind Sie sicher, dass Sie diesen Kunden löschen möchten?')) {
-      deleteCustomer(id);
-      loadCustomers();
-      onRefresh();
+      try {
+        await deleteSupabaseCustomer(id);
+        await loadCustomers();
+        onRefresh();
+      } catch (error) {
+        console.error('Error deleting customer:', error);
+        alert('Fehler beim Löschen des Kunden. Bitte versuchen Sie es erneut.');
+      }
     }
   };
 

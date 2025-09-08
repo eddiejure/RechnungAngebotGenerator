@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Save, ArrowLeft, Plus, Trash2, Calendar, Globe, Euro } from 'lucide-react';
 import { Project, Customer, ProjectPhase } from '../types/crm';
-import { saveProject, getCustomers } from '../utils/crmStorage';
+import { saveSupabaseProject, getSupabaseCustomers } from '../utils/supabaseStorage';
 
 interface ProjectFormProps {
   initialData?: Project | null;
@@ -66,8 +66,13 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({ initialData, onSave, o
     }
   }, [initialData]);
 
-  const loadCustomers = () => {
-    setCustomers(getCustomers());
+  const loadCustomers = async () => {
+    try {
+      const data = await getSupabaseCustomers();
+      setCustomers(data);
+    } catch (error) {
+      console.error('Error loading customers:', error);
+    }
   };
 
   const handleCustomerChange = (customerId: string) => {
@@ -126,7 +131,7 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({ initialData, onSave, o
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.name || !formData.customerId || !formData.budget) {
@@ -165,9 +170,14 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({ initialData, onSave, o
       updatedAt: new Date().toISOString(),
     };
 
-    saveProject(project);
-    onSave();
-    alert('Projekt wurde erfolgreich gespeichert!');
+    try {
+      await saveSupabaseProject(project);
+      onSave();
+      alert('Projekt wurde erfolgreich gespeichert!');
+    } catch (error) {
+      console.error('Error saving project:', error);
+      alert('Fehler beim Speichern des Projekts. Bitte versuchen Sie es erneut.');
+    }
   };
 
   return (

@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { UserPlus, Edit, Trash2, Phone, Mail, Calendar, Target, Plus, Users } from 'lucide-react';
 import { Lead } from '../types/crm';
-import { getLeads, deleteLead, saveCustomer, getCustomers } from '../utils/crmStorage';
+import { 
+  getSupabaseLeads, 
+  deleteSupabaseLead, 
+  saveSupabaseCustomer, 
+  getSupabaseCustomers 
+} from '../utils/supabaseStorage';
 import { Customer } from '../types/crm';
 import { formatCurrency, formatDate } from '../utils/calculations';
 
@@ -20,59 +25,72 @@ export const LeadsList: React.FC<LeadsListProps> = ({ onEdit, onCreateNew, onRef
     loadLeads();
   }, []);
 
-  const loadLeads = () => {
-    setLeads(getLeads());
-  };
-
-  const handleDelete = (id: string) => {
-    if (window.confirm('Sind Sie sicher, dass Sie diesen Lead löschen möchten?')) {
-      deleteLead(id);
-      loadLeads();
-      onRefresh();
+  const loadLeads = async () => {
+    try {
+      const data = await getSupabaseLeads();
+      setLeads(data);
+    } catch (error) {
+      console.error('Error loading leads:', error);
     }
   };
 
-  const handleConvertToCustomer = (lead: Lead) => {
-    if (window.confirm(`Möchten Sie den Lead "${lead.name}" in einen Kunden konvertieren?`)) {
-      // Check if customer with same email already exists
-      const existingCustomers = getCustomers();
-      const existingCustomer = existingCustomers.find(c => c.email === lead.email);
-      
-      if (existingCustomer) {
-        alert('Ein Kunde mit dieser E-Mail-Adresse existiert bereits.');
-        return;
+  const handleDelete = async (id: string) => {
+    if (window.confirm('Sind Sie sicher, dass Sie diesen Lead löschen möchten?')) {
+      try {
+        await deleteSupabaseLead(id);
+        await loadLeads();
+        onRefresh();
+      } catch (error) {
+        console.error('Error deleting lead:', error);
+        alert('Fehler beim Löschen des Leads. Bitte versuchen Sie es erneut.');
       }
-      
-      // Create new customer from lead data
-      const newCustomer: Customer = {
-        id: `customer-${Date.now()}`,
-        name: lead.name,
-        company: lead.company,
-        email: lead.email,
-        phone: lead.phone,
-        address: '',
-        city: '',
-        postalCode: '',
-        country: 'Deutschland',
-        website: '',
-        industry: '',
-        contactPerson: lead.name,
-        notes: `Konvertiert von Lead am ${formatDate(new Date().toISOString())}.\n\nUrsprüngliche Lead-Notizen:\n${lead.notes}${lead.nextFollowUp ? `\n\nUrsprünglicher Follow-up Termin: ${formatDate(lead.nextFollowUp)}` : ''}`,
-        createdAt: new Date().toISOString(),
-        totalProjects: 0,
-        totalRevenue: lead.estimatedValue || 0,
-        lastProject: undefined,
-        nextFollowUp: lead.nextFollowUp,
-      };
-      
-      // Save customer
-      saveCustomer(newCustomer);
-      
-      // Delete the lead after conversion
-      deleteLead(lead.id);
-      loadLeads();
-      onRefresh();
-      alert(`Lead "${lead.name}" wurde erfolgreich zu einem Kunden konvertiert und aus der Lead-Liste entfernt!`);
+    }
+  };
+
+  const handleConvertToCustomer = async (lead: Lead) => {
+    if (window.confirm(`Möchten Sie den Lead "${lead.name}" in einen Kunden konvertieren?`)) {
+      try {
+        // Check if customer with same email already exists
+        const existingCustomers = await getSupabaseCustomers();
+        const existingCustomer = existingCustomers.find(c => c.email === lead.email);
+        
+        if (existingCustomer) {
+          alert('Ein Kunde mit dieser E-Mail-Adresse existiert bereits.');
+          return;
+        }
+        
+        // Create new customer from lead data
+        const newCustomer: Customer = {
+          id: `customer-${Date.now()}`,
+          name: lead.name,
+          company: lead.company,
+          email: lead.email,
+          phone: lead.phone,
+          address: '',
+          city: '',
+          postalCode: '',
+          country: 'Deutschland',
+          website: '',
+          industry: '',
+          contactPerson: lead.name,
+          notes: `Konvertiert von Lead am ${formatDate(new Date().toISOString())}.\n\nUrsprüngliche Lead-Notizen:\n${lead.notes}${lead.nextFollowUp ? `\n\nUrsprünglicher Follow-up Termin: ${formatDate(lead.nextFollowUp)}` : ''}`,
+          createdAt: new Date().toISOString(),
+          totalProjects: 0,
+          totalRevenue: lead.estimatedValue || 0,
+          lastProject: undefined,
+          nextFollowUp: lead.nextFollowUp,
+        };
+        
+        // Save customer and delete lead
+        await saveSupabaseCustomer(newCustomer);
+        await deleteSupabaseLead(lead.id);
+        await loadLeads();
+        onRefresh();
+        alert(`Lead "${lead.name}" wurde erfolgreich zu einem Kunden konvertiert und aus der Lead-Liste entfernt!`);
+      } catch (error) {
+        console.error('Error converting lead to customer:', error);
+        alert('Fehler beim Konvertieren des Leads. Bitte versuchen Sie es erneut.');
+      }
     }
   };
 

@@ -4,7 +4,7 @@ import { PDFDownloadLink } from '@react-pdf/renderer';
 import { DocumentData } from '../types/document';
 import { PDFDocument } from './PDFDocument';
 import { formatCurrency, formatDate } from '../utils/calculations';
-import { deleteDocument } from '../utils/storage';
+import { deleteSupabaseDocument } from '../utils/supabaseStorage';
 
 interface DocumentListProps {
   documents: DocumentData[];
@@ -17,10 +17,15 @@ export const DocumentList: React.FC<DocumentListProps> = ({
   onEdit,
   onRefresh,
 }) => {
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm('Sind Sie sicher, dass Sie dieses Dokument löschen möchten?')) {
-      deleteDocument(id);
-      onRefresh();
+      try {
+        await deleteSupabaseDocument(id);
+        onRefresh();
+      } catch (error) {
+        console.error('Error deleting document:', error);
+        alert('Fehler beim Löschen des Dokuments. Bitte versuchen Sie es erneut.');
+      }
     }
   };
 

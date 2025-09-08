@@ -16,8 +16,7 @@ import {
   Plus
 } from 'lucide-react';
 import { Project, Customer, ProjectDocument } from '../types/crm';
-import { getCustomer, saveProject } from '../utils/crmStorage';
-import { getDocuments } from '../utils/storage';
+import { getSupabaseCustomers, saveSupabaseProject, getSupabaseDocuments } from '../utils/supabaseStorage';
 import { DocumentData } from '../types/document';
 import { formatCurrency, formatDate } from '../utils/calculations';
 
@@ -44,19 +43,29 @@ export const ProjectDetails: React.FC<ProjectDetailsProps> = ({
     loadAvailableDocuments();
   }, [project.customerId]);
 
-  const loadCustomer = () => {
-    const customerData = getCustomer(project.customerId);
-    setCustomer(customerData);
+  const loadCustomer = async () => {
+    try {
+      const customers = await getSupabaseCustomers();
+      const customerData = customers.find(c => c.id === project.customerId);
+      setCustomer(customerData || null);
+    } catch (error) {
+      console.error('Error loading customer:', error);
+    }
   };
 
-  const loadAvailableDocuments = () => {
-    const allDocuments = getDocuments();
-    // Filter documents that belong to this customer
-    const customerDocuments = allDocuments.filter(doc => 
-      doc.customer.name === project.customerName ||
-      doc.customer.name.toLowerCase().includes(project.customerName.toLowerCase())
-    );
-    setAvailableDocuments(customerDocuments);
+  const loadAvailableDocuments = async () => {
+    try {
+      const allDocuments = await getSupabaseDocuments();
+      // Filter documents that belong to this customer
+      const customerDocuments = allDocuments.filter(doc => 
+        doc.linkedCustomerId === project.customerId ||
+        doc.customer.name === project.customerName ||
+        doc.customer.name.toLowerCase().includes(project.customerName.toLowerCase())
+      );
+      setAvailableDocuments(customerDocuments);
+    } catch (error) {
+      console.error('Error loading documents:', error);
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -89,13 +98,18 @@ export const ProjectDetails: React.FC<ProjectDetailsProps> = ({
     }
   };
 
-  const updateProgress = (newProgress: number) => {
+  const updateProgress = async (newProgress: number) => {
     const updatedProject = { ...project, progress: newProgress, updatedAt: new Date().toISOString() };
-    saveProject(updatedProject);
-    onRefresh();
+    try {
+      await saveSupabaseProject(updatedProject);
+      onRefresh();
+    } catch (error) {
+      console.error('Error updating progress:', error);
+      alert('Fehler beim Aktualisieren des Fortschritts. Bitte versuchen Sie es erneut.');
+    }
   };
 
-  const addDocumentToProject = () => {
+  const addDocumentToProject = async () => {
     if (!selectedDocumentId) return;
     
     const document = availableDocuments.find(doc => doc.id === selectedDocumentId);
@@ -115,21 +129,31 @@ export const ProjectDetails: React.FC<ProjectDetailsProps> = ({
       updatedAt: new Date().toISOString(),
     };
 
-    saveProject(updatedProject);
-    setShowAddDocument(false);
-    setSelectedDocumentId('');
-    onRefresh();
+    try {
+      await saveSupabaseProject(updatedProject);
+      setShowAddDocument(false);
+      setSelectedDocumentId('');
+      onRefresh();
+    } catch (error) {
+      console.error('Error adding document to project:', error);
+      alert('Fehler beim Hinzufügen des Dokuments. Bitte versuchen Sie es erneut.');
+    }
   };
 
-  const removeDocumentFromProject = (documentId: string) => {
+  const removeDocumentFromProject = async (documentId: string) => {
     if (window.confirm('Möchten Sie dieses Dokument aus dem Projekt entfernen?')) {
-      const updatedProject = {
-        ...project,
-        documents: project.documents.filter(doc => doc.id !== documentId),
-        updatedAt: new Date().toISOString(),
-      };
-      saveProject(updatedProject);
-      onRefresh();
+      try {
+        const updatedProject = {
+          ...project,
+          documents: project.documents.filter(doc => doc.id !== documentId),
+          updatedAt: new Date().toISOString(),
+        };
+        await saveSupabaseProject(updatedProject);
+        onRefresh();
+      } catch (error) {
+        console.error('Error removing document from project:', error);
+        alert('Fehler beim Entfernen des Dokuments. Bitte versuchen Sie es erneut.');
+      }
     }
   };
 

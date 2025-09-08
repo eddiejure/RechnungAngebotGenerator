@@ -520,6 +520,34 @@ export const saveSupabaseLineItemTemplate = async (template: LineItemTemplate): 
   if (error) throw error;
 };
 
+// Template delete functions (to be implemented)
+export const deleteSupabaseCompanyTemplate = async (id: string): Promise<void> => {
+  const userId = await requireAuth();
+  const { error } = await supabase
+    .from('company_templates')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', userId);
+
+  if (error) throw error;
+};
+
+export const deleteSupabaseLineItemTemplate = async (id: string): Promise<void> => {
+  const userId = await requireAuth();
+  const { error } = await supabase
+    .from('line_item_templates')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', userId);
+
+  if (error) throw error;
+};
+
+export const getSupabaseDefaultCompanyTemplate = async (): Promise<CompanyTemplate | null> => {
+  const templates = await getSupabaseCompanyTemplates();
+  return templates.find(t => t.isDefault) || null;
+};
+
 // Real-time subscriptions
 export const subscribeToCustomers = (callback: (customers: Customer[]) => void) => {
   return supabase

@@ -8,9 +8,13 @@ import { PDFDocument } from './PDFDocument';
 import { DocumentData, LineItem, Customer, Company } from '../types/document';
 import { LineItemTemplate, CompanyTemplate } from '../types/template';
 import { calculateSubtotal, calculateVat, calculateTotal, formatCurrency } from '../utils/calculations';
-import { saveDocument } from '../utils/storage';
-import { getDefaultCompanyTemplate, getLineItemTemplates, getCompanyTemplates } from '../utils/templateStorage';
-import { getCustomers, getProjects } from '../utils/crmStorage';
+import { 
+  saveSupabaseDocument, 
+  getSupabaseCompanyTemplates, 
+  getSupabaseLineItemTemplates,
+  getSupabaseCustomers,
+  getSupabaseProjects
+} from '../utils/supabaseStorage';
 import { Customer as CRMCustomer, Project } from '../types/crm';
 
 const defaultCompany: Company = {
@@ -72,21 +76,7 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({ initialData, onSave 
 
   useEffect(() => {
     // Load default company template
-    const defaultTemplate = getDefaultCompanyTemplate();
-    const allCompanyTemplates = getCompanyTemplates();
-    setCompanyTemplates(allCompanyTemplates);
-    
-    if (defaultTemplate && !initialData) {
-      setCompany(defaultTemplate.company);
-      setSelectedCompanyTemplate(defaultTemplate.id);
-    }
-    
-    // Load line item templates
-    setLineItemTemplates(getLineItemTemplates());
-    
-    // Load CRM data
-    setCrmCustomers(getCustomers());
-    setCrmProjects(getProjects());
+    loadTemplatesAndCrmData();
     
     if (initialData) {
       setDocumentType(initialData.type);
@@ -117,6 +107,31 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({ initialData, onSave 
       setDocumentNumber(`${prefix}-${year}${month}${day}-${time}`);
     }
   }, [initialData, documentType]);
+
+  const loadTemplatesAndCrmData = async () => {
+    try {
+      const [companyTemplates, lineItemTemplates, customers, projects] = await Promise.all([
+        getSupabaseCompanyTemplates(),
+        getSupabaseLineItemTemplates(),
+        getSupabaseCustomers(),
+        getSupabaseProjects(),
+      ]);
+      
+      setCompanyTemplates(companyTemplates);
+      setLineItemTemplates(lineItemTemplates);
+      setCrmCustomers(customers);
+      setCrmProjects(projects);
+      
+      // Set default company template if available and not editing
+      const defaultTemplate = companyTemplates.find(t => t.isDefault);
+      if (defaultTemplate && !initialData) {
+        setCompany(defaultTemplate.company);
+        setSelectedCompanyTemplate(defaultTemplate.id);
+      }
+    } catch (error) {
+      console.error('Error loading templates and CRM data:', error);
+    }
+  };
 
   const handleCompanyTemplateChange = (templateId: string) => {
     setSelectedCompanyTemplate(templateId);
@@ -262,10 +277,15 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({ initialData, onSave 
     createdAt: initialData?.createdAt || new Date().toISOString(),
   };
 
-  const handleSave = () => {
-    saveDocument(documentData);
-    onSave?.();
-    alert('Dokument wurde erfolgreich gespeichert!');
+  const handleSave = async () => {
+    try {
+      await saveSupabaseDocument(documentData);
+      onSave?.();
+      alert('Dokument wurde erfolgreich gespeichert!');
+    } catch (error) {
+      console.error('Error saving document:', error);
+      alert('Fehler beim Speichern des Dokuments. Bitte versuchen Sie es erneut.');
+    }
   };
 
   const categories = [...new Set(lineItemTemplates.map(t => t.category))];

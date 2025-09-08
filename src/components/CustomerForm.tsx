@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Save, ArrowLeft } from 'lucide-react';
 import { Customer } from '../types/crm';
-import { saveCustomer } from '../utils/crmStorage';
+import { saveSupabaseCustomer } from '../utils/supabaseStorage';
 
 interface CustomerFormProps {
   initialData?: Customer | null;
@@ -33,7 +33,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ initialData, onSave,
     }
   }, [initialData]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.name || !formData.email) {
@@ -61,9 +61,14 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ initialData, onSave,
       lastProject: formData.lastProject,
     };
 
-    saveCustomer(customer);
-    onSave();
-    alert('Kunde wurde erfolgreich gespeichert!');
+    try {
+      await saveSupabaseCustomer(customer);
+      onSave();
+      alert('Kunde wurde erfolgreich gespeichert!');
+    } catch (error) {
+      console.error('Error saving customer:', error);
+      alert('Fehler beim Speichern des Kunden. Bitte versuchen Sie es erneut.');
+    }
   };
 
   return (

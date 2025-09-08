@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Save, ArrowLeft } from 'lucide-react';
 import { Lead } from '../types/crm';
-import { saveLead } from '../utils/crmStorage';
+import { saveSupabaseLead } from '../utils/supabaseStorage';
 
 interface LeadFormProps {
   initialData?: Lead | null;
@@ -29,7 +29,7 @@ export const LeadForm: React.FC<LeadFormProps> = ({ initialData, onSave, onCance
     }
   }, [initialData]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.name || !formData.email) {
@@ -53,9 +53,14 @@ export const LeadForm: React.FC<LeadFormProps> = ({ initialData, onSave, onCance
       nextFollowUp: formData.nextFollowUp,
     };
 
-    saveLead(lead);
-    onSave();
-    alert('Lead wurde erfolgreich gespeichert!');
+    try {
+      await saveSupabaseLead(lead);
+      onSave();
+      alert('Lead wurde erfolgreich gespeichert!');
+    } catch (error) {
+      console.error('Error saving lead:', error);
+      alert('Fehler beim Speichern des Leads. Bitte versuchen Sie es erneut.');
+    }
   };
 
   return (

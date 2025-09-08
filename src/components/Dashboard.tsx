@@ -12,7 +12,7 @@ import {
   Target
 } from 'lucide-react';
 import { Lead, Customer, Project } from '../types/crm';
-import { getLeads, getCustomers, getProjects } from '../utils/crmStorage';
+import { getSupabaseLeads, getSupabaseCustomers, getSupabaseProjects } from '../utils/supabaseStorage';
 import { formatCurrency, formatDate } from '../utils/calculations';
 
 export const Dashboard: React.FC = () => {
@@ -21,10 +21,23 @@ export const Dashboard: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
 
   useEffect(() => {
-    setLeads(getLeads());
-    setCustomers(getCustomers());
-    setProjects(getProjects());
+    loadDashboardData();
   }, []);
+
+  const loadDashboardData = async () => {
+    try {
+      const [leadsData, customersData, projectsData] = await Promise.all([
+        getSupabaseLeads(),
+        getSupabaseCustomers(),
+        getSupabaseProjects(),
+      ]);
+      setLeads(leadsData);
+      setCustomers(customersData);
+      setProjects(projectsData);
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+    }
+  };
 
   // Statistics
   const activeProjects = projects.filter(p => p.status === 'In Bearbeitung').length;

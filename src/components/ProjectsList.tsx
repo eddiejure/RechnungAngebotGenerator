@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Briefcase, Edit, Trash2, Plus, Calendar, Euro, Clock, Globe, User, Filter, Search } from 'lucide-react';
 import { Project, Customer } from '../types/crm';
-import { getProjects, deleteProject, getCustomers } from '../utils/crmStorage';
+import { getSupabaseProjects, deleteSupabaseProject, getSupabaseCustomers } from '../utils/supabaseStorage';
 import { formatCurrency, formatDate } from '../utils/calculations';
 
 interface ProjectsListProps {
@@ -28,19 +28,34 @@ export const ProjectsList: React.FC<ProjectsListProps> = ({
     loadCustomers();
   }, []);
 
-  const loadProjects = () => {
-    setProjects(getProjects());
+  const loadProjects = async () => {
+    try {
+      const data = await getSupabaseProjects();
+      setProjects(data);
+    } catch (error) {
+      console.error('Error loading projects:', error);
+    }
   };
 
-  const loadCustomers = () => {
-    setCustomers(getCustomers());
+  const loadCustomers = async () => {
+    try {
+      const data = await getSupabaseCustomers();
+      setCustomers(data);
+    } catch (error) {
+      console.error('Error loading customers:', error);
+    }
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm('Sind Sie sicher, dass Sie dieses Projekt löschen möchten?')) {
-      deleteProject(id);
-      loadProjects();
-      onRefresh();
+      try {
+        await deleteSupabaseProject(id);
+        await loadProjects();
+        onRefresh();
+      } catch (error) {
+        console.error('Error deleting project:', error);
+        alert('Fehler beim Löschen des Projekts. Bitte versuchen Sie es erneut.');
+      }
     }
   };
 

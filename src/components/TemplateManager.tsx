@@ -3,13 +3,13 @@ import { Save, Trash2, Plus, Building, Package, Star, Edit3 } from 'lucide-react
 import { CompanyTemplate, LineItemTemplate } from '../types/template';
 import { Company } from '../types/document';
 import {
-  saveCompanyTemplate,
-  getCompanyTemplates,
-  deleteCompanyTemplate,
-  saveLineItemTemplate,
-  getLineItemTemplates,
-  deleteLineItemTemplate,
-} from '../utils/templateStorage';
+  saveSupabaseCompanyTemplate,
+  getSupabaseCompanyTemplates,
+  deleteSupabaseCompanyTemplate,
+  saveSupabaseLineItemTemplate,
+  getSupabaseLineItemTemplates,
+  deleteSupabaseLineItemTemplate,
+} from '../utils/supabaseStorage';
 import { formatCurrency } from '../utils/calculations';
 
 const defaultCompany: Company = {
@@ -53,12 +53,20 @@ export const TemplateManager: React.FC = () => {
     loadTemplates();
   }, []);
 
-  const loadTemplates = () => {
-    setCompanyTemplates(getCompanyTemplates());
-    setLineItemTemplates(getLineItemTemplates());
+  const loadTemplates = async () => {
+    try {
+      const [companyTemplates, lineItemTemplates] = await Promise.all([
+        getSupabaseCompanyTemplates(),
+        getSupabaseLineItemTemplates(),
+      ]);
+      setCompanyTemplates(companyTemplates);
+      setLineItemTemplates(lineItemTemplates);
+    } catch (error) {
+      console.error('Error loading templates:', error);
+    }
   };
 
-  const handleSaveCompanyTemplate = () => {
+  const handleSaveCompanyTemplate = async () => {
     if (!companyTemplateName.trim()) {
       alert('Bitte geben Sie einen Namen für die Vorlage ein.');
       return;
@@ -72,10 +80,15 @@ export const TemplateManager: React.FC = () => {
       createdAt: new Date().toISOString(),
     };
 
-    saveCompanyTemplate(template);
-    loadTemplates();
-    resetCompanyForm();
-    alert('Firmenvorlage wurde erfolgreich gespeichert!');
+    try {
+      await saveSupabaseCompanyTemplate(template);
+      await loadTemplates();
+      resetCompanyForm();
+      alert('Firmenvorlage wurde erfolgreich gespeichert!');
+    } catch (error) {
+      console.error('Error saving company template:', error);
+      alert('Fehler beim Speichern der Firmenvorlage. Bitte versuchen Sie es erneut.');
+    }
   };
 
   const handleEditCompanyTemplate = (template: CompanyTemplate) => {
@@ -85,10 +98,15 @@ export const TemplateManager: React.FC = () => {
     setEditingCompanyId(template.id);
   };
 
-  const handleDeleteCompanyTemplate = (id: string) => {
+  const handleDeleteCompanyTemplate = async (id: string) => {
     if (window.confirm('Sind Sie sicher, dass Sie diese Firmenvorlage löschen möchten?')) {
-      deleteCompanyTemplate(id);
-      loadTemplates();
+      try {
+        await deleteSupabaseCompanyTemplate(id);
+        await loadTemplates();
+      } catch (error) {
+        console.error('Error deleting company template:', error);
+        alert('Fehler beim Löschen der Firmenvorlage. Bitte versuchen Sie es erneut.');
+      }
     }
   };
 
@@ -99,7 +117,7 @@ export const TemplateManager: React.FC = () => {
     setEditingCompanyId(null);
   };
 
-  const handleSaveLineItemTemplate = () => {
+  const handleSaveLineItemTemplate = async () => {
     if (!itemForm.description.trim()) {
       alert('Bitte geben Sie eine Beschreibung ein.');
       return;
@@ -113,10 +131,15 @@ export const TemplateManager: React.FC = () => {
       createdAt: new Date().toISOString(),
     };
 
-    saveLineItemTemplate(template);
-    loadTemplates();
-    resetItemForm();
-    alert('Positionsvorlage wurde erfolgreich gespeichert!');
+    try {
+      await saveSupabaseLineItemTemplate(template);
+      await loadTemplates();
+      resetItemForm();
+      alert('Positionsvorlage wurde erfolgreich gespeichert!');
+    } catch (error) {
+      console.error('Error saving line item template:', error);
+      alert('Fehler beim Speichern der Positionsvorlage. Bitte versuchen Sie es erneut.');
+    }
   };
 
   const handleEditLineItemTemplate = (template: LineItemTemplate) => {
@@ -128,10 +151,15 @@ export const TemplateManager: React.FC = () => {
     setEditingItemId(template.id);
   };
 
-  const handleDeleteLineItemTemplate = (id: string) => {
+  const handleDeleteLineItemTemplate = async (id: string) => {
     if (window.confirm('Sind Sie sicher, dass Sie diese Positionsvorlage löschen möchten?')) {
-      deleteLineItemTemplate(id);
-      loadTemplates();
+      try {
+        await deleteSupabaseLineItemTemplate(id);
+        await loadTemplates();
+      } catch (error) {
+        console.error('Error deleting line item template:', error);
+        alert('Fehler beim Löschen der Positionsvorlage. Bitte versuchen Sie es erneut.');
+      }
     }
   };
 
