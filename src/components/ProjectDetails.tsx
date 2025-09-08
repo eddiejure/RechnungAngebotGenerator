@@ -207,7 +207,9 @@ export const ProjectDetails: React.FC<ProjectDetailsProps> = ({
                         project.progress === value
                           ? 'bg-blue-600 text-white'
                           : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      }`}
+                  {availableDocuments
+                    .filter(doc => !project.documents.some(pd => pd.documentId === doc.id))
+                    .map((doc) => (
                     >
                       {value}%
                     </button>

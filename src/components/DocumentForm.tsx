@@ -10,6 +10,8 @@ import { LineItemTemplate, CompanyTemplate } from '../types/template';
 import { calculateSubtotal, calculateVat, calculateTotal, formatCurrency } from '../utils/calculations';
 import { saveDocument } from '../utils/storage';
 import { getDefaultCompanyTemplate, getLineItemTemplates, getCompanyTemplates } from '../utils/templateStorage';
+import { getCustomers, getProjects } from '../utils/crmStorage';
+import { Customer as CRMCustomer, Project } from '../types/crm';
 
 const defaultCompany: Company = {
   name: 'Muster GmbH',
@@ -50,6 +52,13 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({ initialData, onSave 
   const [companyTemplates, setCompanyTemplates] = useState<CompanyTemplate[]>([]);
   const [selectedCompanyTemplate, setSelectedCompanyTemplate] = useState<string>('');
   
+  // CRM Integration
+  const [crmCustomers, setCrmCustomers] = useState<CRMCustomer[]>([]);
+  const [crmProjects, setCrmProjects] = useState<Project[]>([]);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>('');
+  const [selectedProjectId, setSelectedProjectId] = useState<string>('');
+  const [useManualCustomer, setUseManualCustomer] = useState<boolean>(false);
+  
   const [customer, setCustomer] = useState<Customer>({
     name: '',
     address: '',
@@ -75,6 +84,10 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({ initialData, onSave 
     // Load line item templates
     setLineItemTemplates(getLineItemTemplates());
     
+    // Load CRM data
+    setCrmCustomers(getCustomers());
+    setCrmProjects(getProjects());
+    
     if (initialData) {
       setDocumentType(initialData.type);
       setDocumentNumber(initialData.documentNumber);
@@ -85,6 +98,9 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({ initialData, onSave 
       setCustomer(initialData.customer);
       setCompany(initialData.company);
       setLineItems(initialData.lineItems);
+      setSelectedCustomerId(initialData.linkedCustomerId || '');
+      setSelectedProjectId(initialData.linkedProjectId || '');
+      setUseManualCustomer(!initialData.linkedCustomerId);
       if (initialData.type === 'letter') {
         setLetterSubject(initialData.letterSubject || '');
         setLetterContent(initialData.letterContent || '');
@@ -113,6 +129,59 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({ initialData, onSave 
       setCompany(defaultCompany);
     }
   };
+
+  const handleCustomerSelection = (customerId: string) => {
+    setSelectedCustomerId(customerId);
+    if (customerId) {
+      const crmCustomer = crmCustomers.find(c => c.id === customerId);
+      if (crmCustomer) {
+        setCustomer({
+          name: crmCustomer.name,
+          address: crmCustomer.address || '',
+          city: crmCustomer.city || '',
+          postalCode: crmCustomer.postalCode || '',
+          country: crmCustomer.country,
+        });
+        
+        // Filter projects for this customer
+        const customerProjects = crmProjects.filter(p => p.customerId === customerId);
+        if (customerProjects.length > 0 && !selectedProjectId) {
+          // Auto-select first project if only one exists
+          if (customerProjects.length === 1) {
+            setSelectedProjectId(customerProjects[0].id);
+          }
+        }
+      }
+    } else {
+      setCustomer({
+        name: '',
+        address: '',
+        city: '',
+        postalCode: '',
+        country: 'Deutschland',
+      });
+      setSelectedProjectId('');
+    }
+  };
+
+  const handleProjectSelection = (projectId: string) => {
+    setSelectedProjectId(projectId);
+    if (projectId) {
+      const project = crmProjects.find(p => p.id === projectId);
+      if (project && !selectedCustomerId) {
+        // Auto-select customer if project is selected but no customer is selected
+        handleCustomerSelection(project.customerId);
+      }
+    }
+  };
+
+  const getFilteredProjects = () => {
+    if (selectedCustomerId) {
+      return crmProjects.filter(p => p.customerId === selectedCustomerId);
+    }
+    return crmProjects;
+  };
+  
   const addLineItem = () => {
     const newItem: LineItem = {
       id: `item-${Date.now()}`,
@@ -184,6 +253,9 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({ initialData, onSave 
     letterSubject: documentType === 'letter' ? letterSubject : undefined,
     letterContent: documentType === 'letter' ? letterContent : undefined,
     letterGreeting: documentType === 'letter' ? letterGreeting : undefined,
+    linkedCustomerId: selectedCustomerId || undefined,
+    linkedProjectId: selectedProjectId || undefined,
+    linkedProjectName: selectedProjectId ? crmProjects.find(p => p.id === selectedProjectId)?.name : undefined,
     subtotal,
     vatAmount,
     total,
@@ -353,128 +425,200 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({ initialData, onSave 
           )}
         </div>
 
-        {/* Letter-specific fields */}
-        {documentType === 'letter' && (
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <h2 className="text-xl font-semibold mb-4">Empfängerdaten</h2>
+        {/* Customer & Project Selection */}
+        <div className="bg-white rounded-lg shadow-sm border p-6">
+          <h2 className="text-xl font-semibold mb-4">Kunde & Projekt</h2>
+          
+          <div className="mb-4">
+            <label className="flex items-center mb-3">
+              <input
+                type="checkbox"
+                checked={useManualCustomer}
+                onChange={(e) => {
+                  setUseManualCustomer(e.target.checked);
+                  if (e.target.checked) {
+                    setSelectedCustomerId('');
+                    setSelectedProjectId('');
+                  }
+                }}
+                className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <span className="text-sm font-medium text-gray-700">
+                Kundendaten manuell eingeben
+              </span>
+            </label>
+          </div>
+
+          {!useManualCustomer && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Kunde auswählen
+                </label>
+                <select
+                  value={selectedCustomerId}
+                  onChange={(e) => handleCustomerSelection(e.target.value)}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Kunde auswählen...</option>
+                  {crmCustomers.map((crmCustomer) => (
+                    <option key={crmCustomer.id} value={crmCustomer.id}>
+                      {crmCustomer.name} {crmCustomer.company && `(${crmCustomer.company})`}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Projekt verknüpfen (optional)
+                </label>
+                <select
+                  value={selectedProjectId}
+                  onChange={(e) => handleProjectSelection(e.target.value)}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  disabled={!selectedCustomerId && getFilteredProjects().length === 0}
+                >
+                  <option value="">Kein Projekt verknüpfen</option>
+                  {getFilteredProjects().map((project) => (
+                    <option key={project.id} value={project.id}>
+                      {project.name} ({project.type})
+                    </option>
+                  ))}
+                </select>
+                {selectedCustomerId && getFilteredProjects().length === 0 && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Keine Projekte für diesen Kunden vorhanden
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {selectedProjectId && (
+            <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <h3 className="text-sm font-medium text-blue-900 mb-2">Verknüpftes Projekt:</h3>
+              {(() => {
+                const project = crmProjects.find(p => p.id === selectedProjectId);
+                return project ? (
+                  <div className="text-sm text-blue-800">
+                    <p><strong>{project.name}</strong></p>
+                    <p>{project.type} • {project.status} • {formatCurrency(project.budget)}</p>
+                  </div>
+                ) : null;
+              })()}
+            </div>
+          )}
+        </div>
+
+        {/* Customer Information */}
+        <div className="bg-white rounded-lg shadow-sm border p-6">
+          <h2 className="text-xl font-semibold mb-4">
+            {documentType === 'letter' ? 'Empfängerdaten' : 'Kundendaten'}
+          </h2>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {documentType === 'letter' ? 'Name / Firma' : 'Firmenname / Name'}
+              </label>
+              <input
+                type="text"
+                value={customer.name}
+                onChange={(e) => setCustomer({ ...customer, name: e.target.value })}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder={documentType === 'letter' ? 'Max Mustermann' : 'Max Mustermann GmbH'}
+                disabled={!useManualCustomer && selectedCustomerId}
+              />
+            </div>
             
-            <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Adresse
+              </label>
+              <input
+                type="text"
+                value={customer.address}
+                onChange={(e) => setCustomer({ ...customer, address: e.target.value })}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder={documentType === 'letter' ? 'Musterstraße 123' : 'Kundenstraße 456'}
+                disabled={!useManualCustomer && selectedCustomerId}
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Name / Firma
+                  PLZ
                 </label>
                 <input
                   type="text"
-                  value={customer.name}
-                  onChange={(e) => setCustomer({ ...customer, name: e.target.value })}
+                  value={customer.postalCode}
+                  onChange={(e) => setCustomer({ ...customer, postalCode: e.target.value })}
                   className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Max Mustermann"
+                  placeholder="12345"
+                  disabled={!useManualCustomer && selectedCustomerId}
                 />
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Adresse
+                  Ort
                 </label>
                 <input
                   type="text"
-                  value={customer.address}
-                  onChange={(e) => setCustomer({ ...customer, address: e.target.value })}
+                  value={customer.city}
+                  onChange={(e) => setCustomer({ ...customer, city: e.target.value })}
                   className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Musterstraße 123"
+                  placeholder={documentType === 'letter' ? 'Berlin' : 'München'}
+                  disabled={!useManualCustomer && selectedCustomerId}
                 />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    PLZ
-                  </label>
-                  <input
-                    type="text"
-                    value={customer.postalCode}
-                    onChange={(e) => setCustomer({ ...customer, postalCode: e.target.value })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="12345"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Ort
-                  </label>
-                  <input
-                    type="text"
-                    value={customer.city}
-                    onChange={(e) => setCustomer({ ...customer, city: e.target.value })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Berlin"
-                  />
-                </div>
               </div>
             </div>
           </div>
-        )}
+        </div>
 
-        {/* Customer Information for invoices/quotes */}
-        {documentType !== 'letter' && (
-          /* Customer Information for invoices/quotes */
+        {/* Letter-specific fields */}
+        {documentType === 'letter' && (
           <div className="bg-white rounded-lg shadow-sm border p-6">
-            <h2 className="text-xl font-semibold mb-4">Kundendaten</h2>
+            <h2 className="text-xl font-semibold mb-4">Brief-Inhalt</h2>
             
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Firmenname / Name
+                  Betreff
                 </label>
                 <input
                   type="text"
-                  value={customer.name}
-                  onChange={(e) => setCustomer({ ...customer, name: e.target.value })}
+                  value={letterSubject}
+                  onChange={(e) => setLetterSubject(e.target.value)}
                   className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Max Mustermann GmbH"
+                  placeholder="Betreff des Briefes..."
                 />
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Adresse
+                  Anrede
                 </label>
                 <input
                   type="text"
-                  value={customer.address}
-                  onChange={(e) => setCustomer({ ...customer, address: e.target.value })}
+                  value={letterGreeting}
+                  onChange={(e) => setLetterGreeting(e.target.value)}
                   className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Kundenstraße 456"
+                  placeholder="Sehr geehrte Damen und Herren,"
                 />
               </div>
               
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    PLZ
-                  </label>
-                  <input
-                    type="text"
-                    value={customer.postalCode}
-                    onChange={(e) => setCustomer({ ...customer, postalCode: e.target.value })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="12345"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Ort
-                  </label>
-                  <input
-                    type="text"
-                    value={customer.city}
-                    onChange={(e) => setCustomer({ ...customer, city: e.target.value })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="München"
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Brief-Text
+                </label>
+                <RichTextEditor
+                  value={letterContent}
+                  onChange={(value) => setLetterContent(value)}
+                  placeholder="Hier können Sie den Inhalt Ihres Briefes eingeben..."
+                />
               </div>
             </div>
           </div>
@@ -605,52 +749,6 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({ initialData, onSave 
               </div>
             </div>
           )}
-        </div>
-      )}
-
-      {/* Letter Content - only for letters */}
-      {documentType === 'letter' && (
-        <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
-          <h2 className="text-xl font-semibold mb-4">Brief-Inhalt</h2>
-          
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Betreff
-              </label>
-              <input
-                type="text"
-                value={letterSubject}
-                onChange={(e) => setLetterSubject(e.target.value)}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Betreff des Briefes..."
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Anrede
-              </label>
-              <input
-                type="text"
-                value={letterGreeting}
-                onChange={(e) => setLetterGreeting(e.target.value)}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Sehr geehrte Damen und Herren,"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Brief-Text
-              </label>
-              <RichTextEditor
-                value={letterContent}
-                onChange={(value) => setLetterContent(value)}
-                placeholder="Hier können Sie den Inhalt Ihres Briefes eingeben..."
-              />
-            </div>
-          </div>
         </div>
       )}
 

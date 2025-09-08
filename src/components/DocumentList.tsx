@@ -121,6 +121,12 @@ export const DocumentList: React.FC<DocumentListProps> = ({
                     <Trash2 size={18} />
                   </button>
                 </div>
+                
+                {doc.linkedProjectName && (
+                  <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">
+                    {doc.linkedProjectName}
+                  </span>
+                )}
               </div>
             </div>
           ))}
