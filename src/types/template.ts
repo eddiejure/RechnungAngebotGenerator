@@ -29,3 +29,37 @@ export interface CompanyTemplate {
   isDefault: boolean;
   createdAt: string;
 }
+
+export interface ProjectTypeTemplate {
+  id: string;
+  name: string;
+  description: string;
+  category: 'Web' | 'Design' | 'Marketing' | 'Service' | 'Sonstiges';
+  defaultPhases: ProjectPhaseTemplate[];
+  estimatedDuration: number; // in days
+  basePrice: number;
+  technologies: string[];
+  features: {
+    responsiveDesign: boolean;
+    seoIncluded: boolean;
+    contentManagement: boolean;
+    maintenanceIncluded: boolean;
+  };
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProjectPhaseTemplate {
+  id: string;
+  name: string;
+  description: string;
+  order: number;
+  estimatedHours: number;
+  estimatedDays: number;
+  dependencies: string[]; // IDs of phases that must be completed first
+  deliverables: string[];
+  isOptional: boolean;
+  createdAt: string;
+  updatedAt: string;
+}

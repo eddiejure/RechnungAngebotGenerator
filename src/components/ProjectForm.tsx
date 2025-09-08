@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Save, ArrowLeft, Plus, Trash2, Calendar, Globe, Euro } from 'lucide-react';
 import { Project, Customer, ProjectPhase } from '../types/crm';
-import { saveSupabaseProject, getSupabaseCustomers } from '../utils/supabaseStorage';
+import { saveSupabaseProject, getSupabaseCustomers, getSupabaseProjectTypeTemplates } from '../utils/supabaseStorage';
+import { ProjectTypeTemplate } from '../types/template';
 
 interface ProjectFormProps {
   initialData?: Project | null;
@@ -41,6 +42,7 @@ const projectTypeOptions = [
 
 export const ProjectForm: React.FC<ProjectFormProps> = ({ initialData, onSave, onCancel }) => {
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [projectTypeTemplates, setProjectTypeTemplates] = useState<ProjectTypeTemplate[]>([]);
   const [formData, setFormData] = useState<Partial<Project>>({
     name: '',
     customerId: '',
@@ -76,6 +78,7 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({ initialData, onSave, o
 
   useEffect(() => {
     loadCustomers();
+    loadProjectTypeTemplates();
     if (initialData) {
       setFormData({
         ...initialData,
@@ -93,6 +96,15 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({ initialData, onSave, o
       setCustomers(data);
     } catch (error) {
       console.error('Error loading customers:', error);
+    }
+  };
+
+  const loadProjectTypeTemplates = async () => {
+    try {
+      const data = await getSupabaseProjectTypeTemplates();
+      setProjectTypeTemplates(data);
+    } catch (error) {
+      console.error('Error loading project type templates:', error);
     }
   };
 
@@ -167,6 +179,45 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({ initialData, onSave, o
     });
   };
 
+  const applyProjectTypeTemplate = (templateId: string) => {
+    const template = projectTypeTemplates.find(t => t.id === templateId);
+    if (!template) return;
+
+    // Apply template data to form
+    setFormData({
+      ...formData,
+      types: [template.name as any], // Add template name as project type
+      budget: template.basePrice,
+      technologies: template.technologies,
+      responsiveDesign: template.features.responsiveDesign,
+      seoIncluded: template.features.seoIncluded,
+      contentManagement: template.features.contentManagement,
+      maintenanceIncluded: template.features.maintenanceIncluded,
+      phases: template.defaultPhases.map(phase => ({
+        id: crypto.randomUUID(),
+        name: phase.name,
+        description: phase.description,
+        status: 'Geplant' as const,
+        order: phase.order,
+        startDate: undefined,
+        endDate: undefined,
+        estimatedHours: phase.estimatedHours,
+        actualHours: undefined,
+      })),
+    });
+
+    // Calculate estimated end date based on template duration
+    if (formData.startDate && template.estimatedDuration) {
+      const startDate = new Date(formData.startDate);
+      const endDate = new Date(startDate);
+      endDate.setDate(startDate.getDate() + template.estimatedDuration);
+      setFormData(prev => ({
+        ...prev,
+        endDate: endDate.toISOString().split('T')[0],
+      }));
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -239,6 +290,41 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({ initialData, onSave, o
         {/* Basic Information */}
         <div className="bg-white rounded-lg shadow-sm border p-6">
           <h2 className="text-xl font-semibold mb-6">Grunddaten</h2>
+          
+          {/* Project Template Selector */}
+          {!initialData && projectTypeTemplates.length > 0 && (
+            <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <h3 className="font-medium text-gray-900 mb-3">🚀 Schnellstart mit Vorlage</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {projectTypeTemplates.map((template) => (
+                  <button
+                    key={template.id}
+                    type="button"
+                    onClick={() => applyProjectTypeTemplate(template.id)}
+                    className="text-left p-3 bg-white border border-blue-200 rounded-md hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                  >
+                    <div className="font-medium text-gray-900 text-sm mb-1">
+                      {template.name}
+                    </div>
+                    <div className="text-xs text-gray-600 mb-2">
+                      {template.description}
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                        {template.category}
+                      </span>
+                      <span className="text-gray-500">
+                        {template.estimatedDuration} Tage
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-blue-600 mt-2">
+                💡 Klicken Sie auf eine Vorlage, um Projekttyp, Phasen und Einstellungen automatisch zu übernehmen
+              </p>
+            </div>
+          )}
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div>

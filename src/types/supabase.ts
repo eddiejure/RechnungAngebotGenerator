@@ -67,6 +67,97 @@ export interface Database {
           updated_at?: string
         }
       }
+      project_type_templates: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          description: string
+          category: string
+          estimated_duration: number
+          base_price: number
+          technologies: string[]
+          features: Json
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          description: string
+          category: string
+          estimated_duration?: number
+          base_price?: number
+          technologies?: string[]
+          features?: Json
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          description?: string
+          category?: string
+          estimated_duration?: number
+          base_price?: number
+          technologies?: string[]
+          features?: Json
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      project_phase_templates: {
+        Row: {
+          id: string
+          user_id: string
+          project_type_template_id: string | null
+          name: string
+          description: string
+          order_index: number
+          estimated_hours: number
+          estimated_days: number
+          dependencies: string[]
+          deliverables: string[]
+          is_optional: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          project_type_template_id?: string | null
+          name: string
+          description: string
+          order_index: number
+          estimated_hours?: number
+          estimated_days?: number
+          dependencies?: string[]
+          deliverables?: string[]
+          is_optional?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          project_type_template_id?: string | null
+          name?: string
+          description?: string
+          order_index?: number
+          estimated_hours?: number
+          estimated_days?: number
+          dependencies?: string[]
+          deliverables?: string[]
+          is_optional?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
       customers: {
         Row: {
           id: string
