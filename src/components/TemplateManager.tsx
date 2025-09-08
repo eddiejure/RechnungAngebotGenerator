@@ -99,18 +99,36 @@ export const TemplateManager: React.FC = () => {
   const loadTemplates = async () => {
     setLoading(true);
     try {
-      const [companyTemplates, lineItemTemplates, projectTypeTemplates, projectPhaseTemplates] = await Promise.all([
+      const [companyTemplates, lineItemTemplates] = await Promise.all([
         getSupabaseCompanyTemplates(),
-        getSupabaseLineItemTemplates(),
-        getSupabaseProjectTypeTemplates(),
         getSupabaseProjectPhaseTemplates(),
       ]);
       setCompanyTemplates(companyTemplates);
       setLineItemTemplates(lineItemTemplates);
-      setProjectTypeTemplates(projectTypeTemplates);
-      setProjectPhaseTemplates(projectPhaseTemplates);
+      
+      // Load project templates separately with error handling
+      try {
+        const projectTypeTemplates = await getSupabaseProjectTypeTemplates();
+        setProjectTypeTemplates(projectTypeTemplates);
+      } catch (error) {
+        console.warn('Project type templates not available yet:', error);
+        setProjectTypeTemplates([]);
+      }
+      
+      try {
+        const projectPhaseTemplates = await getSupabaseProjectPhaseTemplates();
+        setProjectPhaseTemplates(projectPhaseTemplates);
+      } catch (error) {
+        console.warn('Project phase templates not available yet:', error);
+        setProjectPhaseTemplates([]);
+      }
     } catch (error) {
       console.error('Error loading templates:', error);
+      // Set empty arrays as fallback
+      setCompanyTemplates([]);
+      setLineItemTemplates([]);
+      setProjectTypeTemplates([]);
+      setProjectPhaseTemplates([]);
     } finally {
       setLoading(false);
     }

@@ -553,82 +553,169 @@ export const getSupabaseDefaultCompanyTemplate = async (): Promise<CompanyTempla
 // Project Type Template functions
 export const getSupabaseProjectTypeTemplates = async (): Promise<ProjectTypeTemplate[]> => {
   const userId = await requireAuth();
-  const { data, error } = await supabase
-    .from('project_type_templates')
-    .select(`
-      *,
-      project_phase_templates (*)
-    `)
-    .eq('user_id', userId)
-    .eq('is_active', true)
-    .order('created_at', { ascending: false });
+  
+  try {
+    const { data, error } = await supabase
+      .from('project_type_templates')
+      .select(`
+        *,
+        project_phase_templates (*)
+      `)
+      .eq('user_id', userId)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false });
 
-  if (error) throw error;
+    if (error) throw error;
 
-  return data.map(template => ({
-    id: template.id,
-    name: template.name,
-    description: template.description,
-    category: template.category as ProjectTypeTemplate['category'],
-    defaultPhases: (template.project_phase_templates as any[])
-      .sort((a, b) => a.order_index - b.order_index)
-      .map(phase => ({
-        id: phase.id,
-        name: phase.name,
-        description: phase.description,
-        order: phase.order_index,
-        estimatedHours: phase.estimated_hours,
-        estimatedDays: phase.estimated_days,
-        dependencies: phase.dependencies,
-        deliverables: phase.deliverables,
-        isOptional: phase.is_optional,
-        createdAt: phase.created_at,
-        updatedAt: phase.updated_at,
-      })),
-    estimatedDuration: template.estimated_duration,
-    basePrice: template.base_price,
-    technologies: template.technologies,
-    features: template.features as any,
-    isActive: template.is_active,
-    createdAt: template.created_at,
-    updatedAt: template.updated_at,
-  }));
+    return data.map(template => ({
+      id: template.id,
+      name: template.name,
+      description: template.description,
+      category: template.category as ProjectTypeTemplate['category'],
+      defaultPhases: (template.project_phase_templates as any[])
+        .sort((a, b) => a.order_index - b.order_index)
+        .map(phase => ({
+          id: phase.id,
+          name: phase.name,
+          description: phase.description,
+          order: phase.order_index,
+          estimatedHours: phase.estimated_hours,
+          estimatedDays: phase.estimated_days,
+          dependencies: phase.dependencies,
+          deliverables: phase.deliverables,
+          isOptional: phase.is_optional,
+          createdAt: phase.created_at,
+          updatedAt: phase.updated_at,
+        })),
+      estimatedDuration: template.estimated_duration,
+      basePrice: template.base_price,
+      technologies: template.technologies,
+      features: template.features as any,
+      isActive: template.is_active,
+      createdAt: template.created_at,
+      updatedAt: template.updated_at,
+    }));
+  } catch (error) {
+    console.error('Error loading project type templates:', error);
+    return [];
+  }
 };
 
 export const saveSupabaseProjectTypeTemplate = async (template: ProjectTypeTemplate): Promise<void> => {
   const userId = await requireAuth();
   
-  const templateData = {
-    id: template.id,
-    user_id: userId,
-    name: template.name,
-    description: template.description,
-    category: template.category,
-    estimated_duration: template.estimatedDuration,
-    base_price: template.basePrice,
-    technologies: template.technologies,
-    features: template.features,
-    is_active: template.isActive,
-  };
+  try {
+    const templateData = {
+      id: template.id,
+      user_id: userId,
+      name: template.name,
+      description: template.description,
+      category: template.category,
+      estimated_duration: template.estimatedDuration,
+      base_price: template.basePrice,
+      technologies: template.technologies,
+      features: template.features,
+      is_active: template.isActive,
+    };
 
-  const { error: templateError } = await supabase
-    .from('project_type_templates')
-    .upsert(templateData);
+    const { error: templateError } = await supabase
+      .from('project_type_templates')
+      .upsert(templateData);
 
-  if (templateError) throw templateError;
+    if (templateError) throw templateError;
 
-  // Delete existing phases for this template
-  await supabase
-    .from('project_phase_templates')
-    .delete()
-    .eq('project_type_template_id', template.id);
+    // Delete existing phases for this template
+    await supabase
+      .from('project_phase_templates')
+      .delete()
+      .eq('project_type_template_id', template.id);
 
-  // Save phases
-  if (template.defaultPhases && template.defaultPhases.length > 0) {
-    const phasesData = template.defaultPhases.map(phase => ({
+    // Save phases
+    if (template.defaultPhases && template.defaultPhases.length > 0) {
+      const phasesData = template.defaultPhases.map(phase => ({
+        id: phase.id,
+        user_id: userId,
+        project_type_template_id: template.id,
+        name: phase.name,
+        description: phase.description,
+        order_index: phase.order,
+        estimated_hours: phase.estimatedHours,
+        estimated_days: phase.estimatedDays,
+        dependencies: phase.dependencies,
+        deliverables: phase.deliverables,
+        is_optional: phase.isOptional,
+      }));
+
+      const { error: phasesError } = await supabase
+        .from('project_phase_templates')
+        .upsert(phasesData);
+
+      if (phasesError) throw phasesError;
+    }
+  } catch (error) {
+    console.error('Error saving project type template:', error);
+    throw error;
+  }
+};
+
+export const deleteSupabaseProjectTypeTemplate = async (id: string): Promise<void> => {
+  const userId = await requireAuth();
+  
+  try {
+    const { error } = await supabase
+      .from('project_type_templates')
+      .update({ is_active: false })
+      .eq('id', id)
+      .eq('user_id', userId);
+
+    if (error) throw error;
+  } catch (error) {
+    console.error('Error deleting project type template:', error);
+    throw error;
+  }
+};
+
+// Project Phase Template functions
+export const getSupabaseProjectPhaseTemplates = async (): Promise<ProjectPhaseTemplate[]> => {
+  const userId = await requireAuth();
+  
+  try {
+    const { data, error } = await supabase
+      .from('project_phase_templates')
+      .select('*')
+      .eq('user_id', userId)
+      .is('project_type_template_id', null) // Only standalone phases
+      .order('order_index');
+
+    if (error) throw error;
+
+    return data.map(phase => ({
+      id: phase.id,
+      name: phase.name,
+      description: phase.description,
+      order: phase.order_index,
+      estimatedHours: phase.estimated_hours,
+      estimatedDays: phase.estimated_days,
+      dependencies: phase.dependencies,
+      deliverables: phase.deliverables,
+      isOptional: phase.is_optional,
+      createdAt: phase.created_at,
+      updatedAt: phase.updated_at,
+    }));
+  } catch (error) {
+    console.error('Error loading project phase templates:', error);
+    return [];
+  }
+};
+
+export const saveSupabaseProjectPhaseTemplate = async (phase: ProjectPhaseTemplate): Promise<void> => {
+  const userId = await requireAuth();
+  
+  try {
+    const phaseData = {
       id: phase.id,
       user_id: userId,
-      project_type_template_id: template.id,
+      project_type_template_id: null, // Standalone phase
       name: phase.name,
       description: phase.description,
       order_index: phase.order,
@@ -637,87 +724,34 @@ export const saveSupabaseProjectTypeTemplate = async (template: ProjectTypeTempl
       dependencies: phase.dependencies,
       deliverables: phase.deliverables,
       is_optional: phase.isOptional,
-    }));
+    };
 
-    const { error: phasesError } = await supabase
+    const { error } = await supabase
       .from('project_phase_templates')
-      .upsert(phasesData);
+      .upsert(phaseData);
 
-    if (phasesError) throw phasesError;
+    if (error) throw error;
+  } catch (error) {
+    console.error('Error saving project phase template:', error);
+    throw error;
   }
-};
-
-export const deleteSupabaseProjectTypeTemplate = async (id: string): Promise<void> => {
-  const userId = await requireAuth();
-  const { error } = await supabase
-    .from('project_type_templates')
-    .update({ is_active: false })
-    .eq('id', id)
-    .eq('user_id', userId);
-
-  if (error) throw error;
-};
-
-// Project Phase Template functions
-export const getSupabaseProjectPhaseTemplates = async (): Promise<ProjectPhaseTemplate[]> => {
-  const userId = await requireAuth();
-  const { data, error } = await supabase
-    .from('project_phase_templates')
-    .select('*')
-    .eq('user_id', userId)
-    .is('project_type_template_id', null) // Only standalone phases
-    .order('order_index');
-
-  if (error) throw error;
-
-  return data.map(phase => ({
-    id: phase.id,
-    name: phase.name,
-    description: phase.description,
-    order: phase.order_index,
-    estimatedHours: phase.estimated_hours,
-    estimatedDays: phase.estimated_days,
-    dependencies: phase.dependencies,
-    deliverables: phase.deliverables,
-    isOptional: phase.is_optional,
-    createdAt: phase.created_at,
-    updatedAt: phase.updated_at,
-  }));
-};
-
-export const saveSupabaseProjectPhaseTemplate = async (phase: ProjectPhaseTemplate): Promise<void> => {
-  const userId = await requireAuth();
-  
-  const phaseData = {
-    id: phase.id,
-    user_id: userId,
-    project_type_template_id: null, // Standalone phase
-    name: phase.name,
-    description: phase.description,
-    order_index: phase.order,
-    estimated_hours: phase.estimatedHours,
-    estimated_days: phase.estimatedDays,
-    dependencies: phase.dependencies,
-    deliverables: phase.deliverables,
-    is_optional: phase.isOptional,
-  };
-
-  const { error } = await supabase
-    .from('project_phase_templates')
-    .upsert(phaseData);
-
-  if (error) throw error;
 };
 
 export const deleteSupabaseProjectPhaseTemplate = async (id: string): Promise<void> => {
   const userId = await requireAuth();
-  const { error } = await supabase
-    .from('project_phase_templates')
-    .delete()
-    .eq('id', id)
-    .eq('user_id', userId);
+  
+  try {
+    const { error } = await supabase
+      .from('project_phase_templates')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', userId);
 
-  if (error) throw error;
+    if (error) throw error;
+  } catch (error) {
+    console.error('Error deleting project phase template:', error);
+    throw error;
+  }
 };
 
 // Real-time subscriptions
