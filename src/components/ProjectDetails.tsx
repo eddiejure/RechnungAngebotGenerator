@@ -13,11 +13,15 @@ import {
   FileText,
   Download,
   Trash2,
-  Plus
+  Plus,
+  Eye,
+  X
 } from 'lucide-react';
+import { PDFViewer, PDFDownloadLink } from '@react-pdf/renderer';
 import { Project, Customer, ProjectDocument } from '../types/crm';
 import { getSupabaseCustomers, saveSupabaseProject, getSupabaseDocuments } from '../utils/supabaseStorage';
 import { DocumentData } from '../types/document';
+import { PDFDocument } from './PDFDocument';
 import { formatCurrency, formatDate } from '../utils/calculations';
 
 interface ProjectDetailsProps {
@@ -37,6 +41,8 @@ export const ProjectDetails: React.FC<ProjectDetailsProps> = ({
   const [availableDocuments, setAvailableDocuments] = useState<DocumentData[]>([]);
   const [showAddDocument, setShowAddDocument] = useState(false);
   const [selectedDocumentId, setSelectedDocumentId] = useState('');
+  const [previewDocument, setPreviewDocument] = useState<DocumentData | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
     loadCustomer();
@@ -155,6 +161,19 @@ export const ProjectDetails: React.FC<ProjectDetailsProps> = ({
         alert('Fehler beim Entfernen des Dokuments. Bitte versuchen Sie es erneut.');
       }
     }
+  };
+
+  const handlePreviewDocument = (documentId: string) => {
+    const document = availableDocuments.find(doc => doc.id === documentId);
+    if (document) {
+      setPreviewDocument(document);
+      setShowPreview(true);
+    }
+  };
+
+  const closePreview = () => {
+    setShowPreview(false);
+    setPreviewDocument(null);
   };
 
   const completedPhases = project.phases.filter(phase => phase.status === 'Abgeschlossen').length;
@@ -396,12 +415,29 @@ export const ProjectDetails: React.FC<ProjectDetailsProps> = ({
                     
                     <div className="flex items-center gap-2">
                       {doc.documentId && (
-                        <button
-                          className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
-                          title="Dokument öffnen"
-                        >
-                          <Download size={16} />
-                        </button>
+                        <>
+                          <button
+                            onClick={() => handlePreviewDocument(doc.documentId!)}
+                            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                            title="PDF Vorschau"
+                          >
+                            <Eye size={16} />
+                          </button>
+                          
+                          {(() => {
+                            const document = availableDocuments.find(d => d.id === doc.documentId);
+                            return document ? (
+                              <PDFDownloadLink
+                                document={<PDFDocument data={document} />}
+                                fileName={`${document.type === 'invoice' ? 'Rechnung' : document.type === 'quote' ? 'Angebot' : 'Brief'}-${document.documentNumber}.pdf`}
+                                className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-md transition-colors"
+                                title="PDF herunterladen"
+                              >
+                                <Download size={16} />
+                              </PDFDownloadLink>
+                            ) : null;
+                          })()}
+                        </>
                       )}
                       
                       <button
@@ -575,6 +611,55 @@ export const ProjectDetails: React.FC<ProjectDetailsProps> = ({
           )}
         </div>
       </div>
+
+      {/* PDF Preview Modal */}
+      {showPreview && previewDocument && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  PDF Vorschau: {previewDocument.type === 'invoice' ? 'Rechnung' : previewDocument.type === 'quote' ? 'Angebot' : 'Brief'} {previewDocument.documentNumber}
+                </h3>
+                <p className="text-sm text-gray-600">
+                  {previewDocument.customer.name} • {formatDate(previewDocument.date)}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <PDFDownloadLink
+                  document={<PDFDocument data={previewDocument} />}
+                  fileName={`${previewDocument.type === 'invoice' ? 'Rechnung' : previewDocument.type === 'quote' ? 'Angebot' : 'Brief'}-${previewDocument.documentNumber}.pdf`}
+                  className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  <Download size={16} />
+                  Download
+                </PDFDownloadLink>
+                <button
+                  onClick={closePreview}
+                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+                  title="Schließen"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+            </div>
+            
+            {/* PDF Viewer */}
+            <div className="flex-1 min-h-0">
+              <div className="h-full">
+                <PDFViewer
+                  width="100%"
+                  height="100%"
+                  className="border-none"
+                >
+                  <PDFDocument data={previewDocument} />
+                </PDFViewer>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
