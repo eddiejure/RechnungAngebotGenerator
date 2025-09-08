@@ -32,6 +32,7 @@ export interface Customer {
   totalProjects: number;
   totalRevenue: number;
   lastProject?: string;
+  nextFollowUp?: string;
 }
 
 export interface Project {

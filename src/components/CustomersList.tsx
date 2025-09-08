@@ -195,6 +195,13 @@ export const CustomersList: React.FC<CustomersListProps> = ({ onEdit, onCreateNe
                   <span>Letztes Projekt: {formatDate(customer.lastProject)}</span>
                 )}
               </div>
+              
+              {customer.nextFollowUp && (
+                <div className="flex items-center gap-1 text-xs text-orange-600 mt-2">
+                  <Calendar size={12} />
+                  <span>Follow-up: {formatDate(customer.nextFollowUp)}</span>
+                </div>
+              )}
             </div>
 
             {customer.notes && (

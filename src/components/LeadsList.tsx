@@ -57,30 +57,21 @@ export const LeadsList: React.FC<LeadsListProps> = ({ onEdit, onCreateNew, onRef
         website: '',
         industry: '',
         contactPerson: lead.name,
-        notes: `Konvertiert von Lead am ${formatDate(new Date().toISOString())}.\n\nUrsprüngliche Lead-Notizen:\n${lead.notes}`,
+        notes: `Konvertiert von Lead am ${formatDate(new Date().toISOString())}.\n\nUrsprüngliche Lead-Notizen:\n${lead.notes}${lead.nextFollowUp ? `\n\nUrsprünglicher Follow-up Termin: ${formatDate(lead.nextFollowUp)}` : ''}`,
         createdAt: new Date().toISOString(),
         totalProjects: 0,
         totalRevenue: lead.estimatedValue || 0,
-        lastProject: undefined,
+        lastProject: lead.nextFollowUp,
       };
       
       // Save customer
       saveCustomer(newCustomer);
       
-      // Update lead status to "Gewonnen"
-      const updatedLead: Lead = {
-        ...lead,
-        status: 'Gewonnen',
-        notes: lead.notes + `\n\nKonvertiert zu Kunde am ${formatDate(new Date().toISOString())}`
-      };
-      
-      // Save updated lead (you'll need to import saveLead)
-      import('../utils/crmStorage').then(({ saveLead }) => {
-        saveLead(updatedLead);
-        loadLeads();
-        onRefresh();
-        alert(`Lead "${lead.name}" wurde erfolgreich zu einem Kunden konvertiert!`);
-      });
+      // Delete the lead after conversion
+      deleteLead(lead.id);
+      loadLeads();
+      onRefresh();
+      alert(`Lead "${lead.name}" wurde erfolgreich zu einem Kunden konvertiert und aus der Lead-Liste entfernt!`);
     }
   };
 
