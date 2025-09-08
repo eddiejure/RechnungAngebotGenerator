@@ -73,7 +73,7 @@ export const TemplateManager: React.FC = () => {
     }
 
     const template: CompanyTemplate = {
-      id: editingCompanyId || `company-${Date.now()}`,
+      id: editingCompanyId || crypto.randomUUID(),
       name: companyTemplateName,
       company: companyForm,
       isDefault: isDefaultTemplate,
@@ -124,7 +124,7 @@ export const TemplateManager: React.FC = () => {
     }
 
     const template: LineItemTemplate = {
-      id: editingItemId || `item-${Date.now()}`,
+      id: editingItemId || crypto.randomUUID(),
       description: itemForm.description,
       unitPrice: itemForm.unitPrice,
       category: itemForm.category || 'Allgemein',

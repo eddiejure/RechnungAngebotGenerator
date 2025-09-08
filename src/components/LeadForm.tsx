@@ -38,7 +38,7 @@ export const LeadForm: React.FC<LeadFormProps> = ({ initialData, onSave, onCance
     }
 
     const lead: Lead = {
-      id: initialData?.id || `lead-${Date.now()}`,
+      id: initialData?.id || crypto.randomUUID(),
       name: formData.name!,
       company: formData.company,
       email: formData.email!,

@@ -199,7 +199,7 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({ initialData, onSave 
   
   const addLineItem = () => {
     const newItem: LineItem = {
-      id: `item-${Date.now()}`,
+      id: crypto.randomUUID(),
       position: lineItems.length + 1,
       description: '',
       quantity: 1,
@@ -211,7 +211,7 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({ initialData, onSave 
 
   const addLineItemFromTemplate = (template: LineItemTemplate) => {
     const newItem: LineItem = {
-      id: `item-${Date.now()}`,
+      id: crypto.randomUUID(),
       position: lineItems.length + 1,
       description: template.description,
       quantity: 1,
@@ -255,7 +255,7 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({ initialData, onSave 
   const total = calculateTotal(subtotal, vatAmount);
 
   const documentData: DocumentData = {
-    id: initialData?.id || `doc-${Date.now()}`,
+    id: initialData?.id || crypto.randomUUID(),
     type: documentType,
     documentNumber,
     date,
