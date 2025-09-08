@@ -79,7 +79,7 @@ function App() {
 
   const handleSaveLead = () => {
     loadLeads();
-    loadCustomers(); // Refresh customers in case lead was converted
+    loadCustomers();
     setCurrentView('leads');
     setEditingLead(null);
   };

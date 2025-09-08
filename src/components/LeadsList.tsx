@@ -61,7 +61,8 @@ export const LeadsList: React.FC<LeadsListProps> = ({ onEdit, onCreateNew, onRef
         createdAt: new Date().toISOString(),
         totalProjects: 0,
         totalRevenue: lead.estimatedValue || 0,
-        lastProject: lead.nextFollowUp,
+        lastProject: undefined,
+        nextFollowUp: lead.nextFollowUp,
       };
       
       // Save customer
