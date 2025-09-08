@@ -51,4 +51,9 @@ export interface DocumentData {
   letterSubject?: string;
   letterContent?: string;
   letterGreeting?: string;
+  // Project linking
+  linkedProjectId?: string;
+  linkedProjectName?: string;
+  // Customer linking for easier management
+  linkedCustomerId?: string;
 }
