@@ -246,6 +246,16 @@ export const LeadsList: React.FC<LeadsListProps> = ({ onEdit, onCreateNew, onRef
                   </button>
                 )}
                 
+                {!['Gewonnen', 'Verloren'].includes(lead.status) && (
+                  <button
+                    onClick={() => handleConvertToCustomer(lead)}
+                    className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-md transition-colors"
+                    title="Zu Kunde konvertieren"
+                  >
+                    <Users size={16} />
+                  </button>
+                )}
+                
                 <button
                   onClick={() => handleDelete(lead.id)}
                   className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
