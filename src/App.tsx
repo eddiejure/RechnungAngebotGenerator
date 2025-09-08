@@ -1,45 +1,102 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Plus, FolderOpen, Settings } from 'lucide-react';
+import { 
+  LayoutDashboard, 
+  Users, 
+  UserPlus, 
+  Briefcase, 
+  FileText, 
+  Plus, 
+  Settings,
+  Target
+} from 'lucide-react';
+import { Dashboard } from './components/Dashboard';
+import { LeadsList } from './components/LeadsList';
+import { LeadForm } from './components/LeadForm';
 import { DocumentForm } from './components/DocumentForm';
 import { DocumentList } from './components/DocumentList';
 import { TemplateManager } from './components/TemplateManager';
 import { DocumentData } from './types/document';
+import { Lead } from './types/crm';
 import { getDocuments } from './utils/storage';
+import { getLeads } from './utils/crmStorage';
 
-type View = 'list' | 'create' | 'edit' | 'templates';
+type View = 'dashboard' | 'leads' | 'customers' | 'projects' | 'documents' | 'create-lead' | 'edit-lead' | 'create-document' | 'edit-document' | 'templates';
 
 function App() {
-  const [currentView, setCurrentView] = useState<View>('list');
+  const [currentView, setCurrentView] = useState<View>('dashboard');
   const [documents, setDocuments] = useState<DocumentData[]>([]);
+  const [leads, setLeads] = useState<Lead[]>([]);
   const [editingDocument, setEditingDocument] = useState<DocumentData | null>(null);
+  const [editingLead, setEditingLead] = useState<Lead | null>(null);
 
   useEffect(() => {
     loadDocuments();
+    loadLeads();
   }, []);
 
   const loadDocuments = () => {
     setDocuments(getDocuments());
   };
 
+  const loadLeads = () => {
+    setLeads(getLeads());
+  };
+
   const handleCreateNew = () => {
     setEditingDocument(null);
-    setCurrentView('create');
+    setCurrentView('create-document');
   };
 
   const handleEdit = (document: DocumentData) => {
     setEditingDocument(document);
-    setCurrentView('edit');
+    setCurrentView('edit-document');
   };
 
   const handleSave = () => {
     loadDocuments();
-    setCurrentView('list');
+    setCurrentView('documents');
     setEditingDocument(null);
   };
 
-  const handleBackToList = () => {
-    setCurrentView('list');
+  const handleCreateNewLead = () => {
+    setEditingLead(null);
+    setCurrentView('create-lead');
+  };
+
+  const handleEditLead = (lead: Lead) => {
+    setEditingLead(lead);
+    setCurrentView('edit-lead');
+  };
+
+  const handleSaveLead = () => {
+    loadLeads();
+    setCurrentView('leads');
+    setEditingLead(null);
+  };
+
+  const handleBackToDashboard = () => {
+    setCurrentView('dashboard');
     setEditingDocument(null);
+    setEditingLead(null);
+  };
+
+  const getPageTitle = () => {
+    switch (currentView) {
+      case 'dashboard':
+        return 'Dashboard';
+      case 'leads':
+        return 'Leads';
+      case 'customers':
+        return 'Kunden';
+      case 'projects':
+        return 'Projekte';
+      case 'documents':
+        return 'Dokumente';
+      case 'templates':
+        return 'Vorlagen';
+      default:
+        return 'Webdesign CRM';
+    }
   };
 
   return (
@@ -49,65 +106,176 @@ function App() {
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-600 text-white rounded-lg">
-                <FileText size={24} />
+              <div className="p-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg">
+                <Target size={24} />
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">
-                  Rechnungs- und Angebots-Generator
+                  Webdesign CRM
                 </h1>
                 <p className="text-sm text-gray-600">
-                  Professionelle deutsche Geschäftsdokumente erstellen
+                  Kunden, Leads und Projekte professionell verwalten
                 </p>
               </div>
             </div>
             
             <div className="flex items-center gap-3">
-              {currentView === 'templates' && (
+              {/* Quick Actions */}
+              {currentView === 'leads' && (
                 <button
-                  onClick={handleBackToList}
-                  className="flex items-center gap-2 text-gray-600 hover:text-gray-800 px-4 py-2 rounded-md hover:bg-gray-100 transition-colors"
+                  onClick={handleCreateNewLead}
+                  className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
                 >
-                  <FolderOpen size={18} />
-                  Zur Übersicht
+                  <UserPlus size={18} />
+                  Neuer Lead
                 </button>
               )}
               
-              {(currentView === 'create' || currentView === 'edit') && (
+              {currentView === 'documents' && (
                 <button
-                  onClick={handleBackToList}
-                  className="flex items-center gap-2 text-gray-600 hover:text-gray-800 px-4 py-2 rounded-md hover:bg-gray-100 transition-colors"
+                  onClick={handleCreateNew}
+                  className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
                 >
-                  <FolderOpen size={18} />
-                  Zur Übersicht
+                  <Plus size={18} />
+                  Neues Dokument
                 </button>
               )}
               
-              {currentView === 'list' && (
+              {['templates', 'create-lead', 'edit-lead', 'create-document', 'edit-document'].includes(currentView) && (
                 <button
-                  onClick={() => setCurrentView('templates')}
+                  onClick={handleBackToDashboard}
                   className="flex items-center gap-2 text-gray-600 hover:text-gray-800 px-4 py-2 rounded-md hover:bg-gray-100 transition-colors"
                 >
-                  <Settings size={18} />
-                  Vorlagen
+                  <LayoutDashboard size={18} />
+                  Dashboard
                 </button>
               )}
-              
-              <button
-                onClick={handleCreateNew}
-                className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
-              >
-                <Plus size={18} />
-                Neues Dokument
-              </button>
             </div>
           </div>
         </div>
       </header>
 
+      {/* Navigation */}
+      <nav className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex space-x-8">
+            <button
+              onClick={() => setCurrentView('dashboard')}
+              className={`flex items-center gap-2 px-3 py-4 text-sm font-medium border-b-2 transition-colors ${
+                currentView === 'dashboard'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <LayoutDashboard size={18} />
+              Dashboard
+            </button>
+            
+            <button
+              onClick={() => setCurrentView('leads')}
+              className={`flex items-center gap-2 px-3 py-4 text-sm font-medium border-b-2 transition-colors ${
+                currentView === 'leads' || currentView === 'create-lead' || currentView === 'edit-lead'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <UserPlus size={18} />
+              Leads
+              {leads.filter(l => l.status === 'Neu').length > 0 && (
+                <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">
+                  {leads.filter(l => l.status === 'Neu').length}
+                </span>
+              )}
+            </button>
+            
+            <button
+              onClick={() => setCurrentView('customers')}
+              className={`flex items-center gap-2 px-3 py-4 text-sm font-medium border-b-2 transition-colors ${
+                currentView === 'customers'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <Users size={18} />
+              Kunden
+            </button>
+            
+            <button
+              onClick={() => setCurrentView('projects')}
+              className={`flex items-center gap-2 px-3 py-4 text-sm font-medium border-b-2 transition-colors ${
+                currentView === 'projects'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <Briefcase size={18} />
+              Projekte
+            </button>
+            
+            <button
+              onClick={() => setCurrentView('documents')}
+              className={`flex items-center gap-2 px-3 py-4 text-sm font-medium border-b-2 transition-colors ${
+                currentView === 'documents' || currentView === 'create-document' || currentView === 'edit-document'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <FileText size={18} />
+              Dokumente
+            </button>
+            
+            <button
+              onClick={() => setCurrentView('templates')}
+              className={`flex items-center gap-2 px-3 py-4 text-sm font-medium border-b-2 transition-colors ${
+                currentView === 'templates'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <Settings size={18} />
+              Vorlagen
+            </button>
+          </div>
+        </div>
+      </nav>
+
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 py-8">
-        {currentView === 'list' && (
+        {currentView === 'dashboard' && <Dashboard />}
+        
+        {currentView === 'leads' && (
+          <LeadsList
+            onEdit={handleEditLead}
+            onCreateNew={handleCreateNewLead}
+            onRefresh={loadLeads}
+          />
+        )}
+        
+        {currentView === 'customers' && (
+          <div className="bg-white rounded-lg shadow-sm border p-12 text-center">
+            <Users size={64} className="mx-auto mb-4 text-gray-300" />
+            <h3 className="text-xl font-medium text-gray-900 mb-2">
+              Kunden-Verwaltung
+            </h3>
+            <p className="text-gray-600">
+              Diese Funktion wird in Kürze verfügbar sein
+            </p>
+          </div>
+        )}
+        
+        {currentView === 'projects' && (
+          <div className="bg-white rounded-lg shadow-sm border p-12 text-center">
+            <Briefcase size={64} className="mx-auto mb-4 text-gray-300" />
+            <h3 className="text-xl font-medium text-gray-900 mb-2">
+              Projekt-Verwaltung
+            </h3>
+            <p className="text-gray-600">
+              Diese Funktion wird in Kürze verfügbar sein
+            </p>
+          </div>
+        )}
+        
+        {currentView === 'documents' && (
           <DocumentList
             documents={documents}
             onEdit={handleEdit}
@@ -115,9 +283,24 @@ function App() {
           />
         )}
         
+        {currentView === 'create-lead' && (
+          <LeadForm
+            onSave={handleSaveLead}
+            onCancel={() => setCurrentView('leads')}
+          />
+        )}
+        
+        {currentView === 'edit-lead' && (
+          <LeadForm
+            initialData={editingLead}
+            onSave={handleSaveLead}
+            onCancel={() => setCurrentView('leads')}
+          />
+        )}
+        
         {currentView === 'templates' && <TemplateManager />}
         
-        {(currentView === 'create' || currentView === 'edit') && (
+        {(currentView === 'create-document' || currentView === 'edit-document') && (
           <DocumentForm
             initialData={editingDocument}
             onSave={handleSave}
@@ -130,10 +313,10 @@ function App() {
         <div className="max-w-7xl mx-auto px-6 py-8">
           <div className="text-center text-sm text-gray-600">
             <p className="mb-2">
-              Deutsche Rechnungs- und Angebots-App mit rechtskomplanten Templates
+              Webdesign CRM - Professionelle Kunden- und Projektverwaltung
             </p>
             <p>
-              Unterstützt Kleinunternehmerregelung nach §19 UStG und alle Pflichtangaben
+              Mit integrierter Dokumentenerstellung und rechtskomplanten Templates
             </p>
           </div>
         </div>
