@@ -40,7 +40,7 @@ export interface Project {
   name: string;
   customerId: string;
   customerName: string;
-  type: 'Website' | 'E-Commerce' | 'Landing Page' | 'Redesign' | 'Wartung' | 'SEO' | 'Branding' | 'App' | 'Corporate Website' | 'Portfolio' | 'Blog';
+  types: ('Website' | 'E-Commerce' | 'Landing Page' | 'Redesign' | 'Wartung' | 'SEO' | 'Branding' | 'App' | 'Corporate Website' | 'Portfolio' | 'Blog' | 'Logo Design' | 'Druckmedien' | 'Social Media' | 'Beratung' | 'Hosting' | 'Domain' | 'Sonstiges')[];
   status: 'Geplant' | 'In Bearbeitung' | 'Review' | 'Abgeschlossen' | 'Pausiert' | 'Storniert';
   priority: 'Niedrig' | 'Mittel' | 'Hoch' | 'Dringend';
   paymentType: 'Einmalzahlung' | 'Monatliches Abo' | 'Jährliches Abo';

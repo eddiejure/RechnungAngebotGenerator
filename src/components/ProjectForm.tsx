@@ -18,13 +18,34 @@ const defaultPhases: Omit<ProjectPhase, 'id'>[] = [
   { name: 'Launch', description: 'Website live schalten', status: 'Geplant', order: 6 },
 ];
 
+const projectTypeOptions = [
+  { value: 'Website', label: 'Website', category: 'Web' },
+  { value: 'E-Commerce', label: 'E-Commerce', category: 'Web' },
+  { value: 'Landing Page', label: 'Landing Page', category: 'Web' },
+  { value: 'Corporate Website', label: 'Corporate Website', category: 'Web' },
+  { value: 'Portfolio', label: 'Portfolio', category: 'Web' },
+  { value: 'Blog', label: 'Blog', category: 'Web' },
+  { value: 'App', label: 'App', category: 'Web' },
+  { value: 'Redesign', label: 'Redesign', category: 'Web' },
+  { value: 'Logo Design', label: 'Logo Design', category: 'Design' },
+  { value: 'Branding', label: 'Branding', category: 'Design' },
+  { value: 'Druckmedien', label: 'Druckmedien', category: 'Design' },
+  { value: 'Social Media', label: 'Social Media', category: 'Marketing' },
+  { value: 'SEO', label: 'SEO', category: 'Marketing' },
+  { value: 'Beratung', label: 'Beratung', category: 'Service' },
+  { value: 'Wartung', label: 'Wartung', category: 'Service' },
+  { value: 'Hosting', label: 'Hosting', category: 'Service' },
+  { value: 'Domain', label: 'Domain', category: 'Service' },
+  { value: 'Sonstiges', label: 'Sonstiges', category: 'Sonstiges' },
+];
+
 export const ProjectForm: React.FC<ProjectFormProps> = ({ initialData, onSave, onCancel }) => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [formData, setFormData] = useState<Partial<Project>>({
     name: '',
     customerId: '',
     customerName: '',
-    type: 'Website',
+    types: ['Website'],
     status: 'Geplant',
     priority: 'Mittel',
     paymentType: 'Einmalzahlung',
@@ -84,6 +105,21 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({ initialData, onSave, o
     });
   };
 
+  const handleTypeToggle = (type: string) => {
+    const currentTypes = formData.types || [];
+    if (currentTypes.includes(type as any)) {
+      setFormData({
+        ...formData,
+        types: currentTypes.filter(t => t !== type) as any[],
+      });
+    } else {
+      setFormData({
+        ...formData,
+        types: [...currentTypes, type] as any[],
+      });
+    }
+  };
+
   const addTechnology = () => {
     if (newTechnology.trim() && !formData.technologies?.includes(newTechnology.trim())) {
       setFormData({
@@ -134,7 +170,7 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({ initialData, onSave, o
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name || !formData.customerId || !formData.budget) {
+    if (!formData.name || !formData.customerId || !formData.budget || !formData.types || formData.types.length === 0) {
       alert('Bitte füllen Sie alle Pflichtfelder aus.');
       return;
     }
@@ -144,7 +180,7 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({ initialData, onSave, o
       name: formData.name!,
       customerId: formData.customerId!,
       customerName: formData.customerName!,
-      type: formData.type!,
+      types: formData.types!,
       status: formData.status!,
       priority: formData.priority!,
       paymentType: formData.paymentType!,
@@ -240,25 +276,61 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({ initialData, onSave, o
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Projekttyp
+                Projekttypen *
               </label>
-              <select
-                value={formData.type}
-                onChange={(e) => setFormData({ ...formData, type: e.target.value as Project['type'] })}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="Website">Website</option>
-                <option value="E-Commerce">E-Commerce</option>
-                <option value="Landing Page">Landing Page</option>
-                <option value="Corporate Website">Corporate Website</option>
-                <option value="Portfolio">Portfolio</option>
-                <option value="Blog">Blog</option>
-                <option value="Redesign">Redesign</option>
-                <option value="Wartung">Wartung</option>
-                <option value="SEO">SEO</option>
-                <option value="Branding">Branding</option>
-                <option value="App">App</option>
-              </select>
+              <div className="space-y-3">
+                {['Web', 'Design', 'Marketing', 'Service', 'Sonstiges'].map((category) => (
+                  <div key={category}>
+                    <h4 className="text-sm font-medium text-gray-600 mb-2">{category}</h4>
+                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
+                      {projectTypeOptions
+                        .filter(option => option.category === category)
+                        .map((option) => (
+                          <label
+                            key={option.value}
+                            className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors ${
+                              formData.types?.includes(option.value as any)
+                                ? 'border-blue-500 bg-blue-50 text-blue-700'
+                                : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={formData.types?.includes(option.value as any) || false}
+                              onChange={() => handleTypeToggle(option.value)}
+                              className="sr-only"
+                            />
+                            <span className="text-sm font-medium">{option.label}</span>
+                          </label>
+                        ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {formData.types && formData.types.length > 0 && (
+                <div className="mt-3 p-3 bg-blue-50 rounded-lg">
+                  <p className="text-sm text-blue-700 font-medium mb-1">
+                    Ausgewählte Projekttypen ({formData.types.length}):
+                  </p>
+                  <div className="flex flex-wrap gap-1">
+                    {formData.types.map((type, index) => (
+                      <span
+                        key={index}
+                        className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full"
+                      >
+                        {type}
+                        <button
+                          type="button"
+                          onClick={() => handleTypeToggle(type)}
+                          className="text-blue-600 hover:text-blue-800"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
             
             <div>
