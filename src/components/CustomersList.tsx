@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Edit, Trash2, Phone, Mail, MapPin, Plus, Building, Euro } from 'lucide-react';
+import { Users, Edit, Trash2, Phone, Mail, MapPin, Plus, Building, Euro, Calendar } from 'lucide-react';
 import { Customer } from '../types/crm';
 import { getCustomers, deleteCustomer } from '../utils/crmStorage';
 import { formatCurrency, formatDate } from '../utils/calculations';
