@@ -12,6 +12,7 @@
   "dependencies": {
     "@hello-pangea/dnd": "^18.0.1",
     "@react-pdf/renderer": "^4.3.0",
+    "@supabase/supabase-js": "^2.57.2",
     "@tiptap/extension-text-align": "^3.4.1",
     "@tiptap/extension-underline": "^3.4.1",
     "@tiptap/react": "^3.4.1",

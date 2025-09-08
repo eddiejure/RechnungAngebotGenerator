@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { AuthWrapper } from './components/AuthWrapper';
 import { 
   LayoutDashboard, 
   Users, 
@@ -22,8 +23,16 @@ import { DocumentList } from './components/DocumentList';
 import { TemplateManager } from './components/TemplateManager';
 import { DocumentData } from './types/document';
 import { Lead, Customer, Project } from './types/crm';
-import { getDocuments } from './utils/storage';
-import { getLeads, getCustomers, getProjects } from './utils/crmStorage';
+import { 
+  getSupabaseDocuments, 
+  getSupabaseLeads, 
+  getSupabaseCustomers, 
+  getSupabaseProjects,
+  subscribeToCustomers,
+  subscribeToLeads,
+  subscribeToProjects,
+  subscribeToDocuments
+} from './utils/supabaseStorage';
 
 type View = 'dashboard' | 'leads' | 'customers' | 'projects' | 'documents' | 'create-lead' | 'edit-lead' | 'create-customer' | 'edit-customer' | 'create-project' | 'edit-project' | 'view-project' | 'create-document' | 'edit-document' | 'templates';
 
@@ -40,26 +49,76 @@ function App() {
   const [viewingProject, setViewingProject] = useState<Project | null>(null);
 
   useEffect(() => {
-    loadDocuments();
-    loadLeads();
-    loadCustomers();
-    loadProjects();
+    loadAllData();
+    setupSubscriptions();
   }, []);
 
-  const loadDocuments = () => {
-    setDocuments(getDocuments());
+  const loadAllData = async () => {
+    try {
+      const [documentsData, leadsData, customersData, projectsData] = await Promise.all([
+        getSupabaseDocuments(),
+        getSupabaseLeads(),
+        getSupabaseCustomers(),
+        getSupabaseProjects(),
+      ]);
+      
+      setDocuments(documentsData);
+      setLeads(leadsData);
+      setCustomers(customersData);
+      setProjects(projectsData);
+    } catch (error) {
+      console.error('Error loading data:', error);
+    }
   };
 
-  const loadLeads = () => {
-    setLeads(getLeads());
+  const setupSubscriptions = () => {
+    const customersSub = subscribeToCustomers(setCustomers);
+    const leadsSub = subscribeToLeads(setLeads);
+    const projectsSub = subscribeToProjects(setProjects);
+    const documentsSub = subscribeToDocuments(setDocuments);
+
+    return () => {
+      customersSub.unsubscribe();
+      leadsSub.unsubscribe();
+      projectsSub.unsubscribe();
+      documentsSub.unsubscribe();
+    };
   };
 
-  const loadCustomers = () => {
-    setCustomers(getCustomers());
+  const loadDocuments = async () => {
+    try {
+      const data = await getSupabaseDocuments();
+      setDocuments(data);
+    } catch (error) {
+      console.error('Error loading documents:', error);
+    }
   };
 
-  const loadProjects = () => {
-    setProjects(getProjects());
+  const loadLeads = async () => {
+    try {
+      const data = await getSupabaseLeads();
+      setLeads(data);
+    } catch (error) {
+      console.error('Error loading leads:', error);
+    }
+  };
+
+  const loadCustomers = async () => {
+    try {
+      const data = await getSupabaseCustomers();
+      setCustomers(data);
+    } catch (error) {
+      console.error('Error loading customers:', error);
+    }
+  };
+
+  const loadProjects = async () => {
+    try {
+      const data = await getSupabaseProjects();
+      setProjects(data);
+    } catch (error) {
+      console.error('Error loading projects:', error);
+    }
   };
 
   const handleCreateNew = () => {
@@ -161,7 +220,8 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <AuthWrapper>
+      <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-6 py-4">
@@ -451,7 +511,8 @@ function App() {
           </div>
         </div>
       </footer>
-    </div>
+      </div>
+    </AuthWrapper>
   );
 }
 
