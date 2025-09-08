@@ -946,6 +946,557 @@ export const TemplateManager: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Project Type Templates Tab */}
+      {activeTab === 'project-types' && (
+        <div className="space-y-8">
+          {/* Project Type Form */}
+          <div className="bg-white rounded-lg shadow-sm border p-6">
+            <h2 className="text-xl font-semibold mb-4">
+              {editingProjectTypeId ? 'Projekttyp-Vorlage bearbeiten' : 'Neue Projekttyp-Vorlage erstellen'}
+            </h2>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Name *
+                </label>
+                <input
+                  type="text"
+                  value={projectTypeForm.name}
+                  onChange={(e) => setProjectTypeForm({ ...projectTypeForm, name: e.target.value })}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="z.B. E-Commerce Website"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Kategorie
+                </label>
+                <select
+                  value={projectTypeForm.category}
+                  onChange={(e) => setProjectTypeForm({ ...projectTypeForm, category: e.target.value as ProjectTypeTemplate['category'] })}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="Web">Web</option>
+                  <option value="Design">Design</option>
+                  <option value="Marketing">Marketing</option>
+                  <option value="Service">Service</option>
+                  <option value="Sonstiges">Sonstiges</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Geschätzte Dauer (Tage)
+                </label>
+                <input
+                  type="number"
+                  value={projectTypeForm.estimatedDuration}
+                  onChange={(e) => setProjectTypeForm({ ...projectTypeForm, estimatedDuration: parseInt(e.target.value) || 0 })}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  min="1"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Basispreis (€)
+                </label>
+                <input
+                  type="number"
+                  value={projectTypeForm.basePrice}
+                  onChange={(e) => setProjectTypeForm({ ...projectTypeForm, basePrice: parseFloat(e.target.value) || 0 })}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  min="0"
+                  step="0.01"
+                />
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Beschreibung
+              </label>
+              <textarea
+                value={projectTypeForm.description}
+                onChange={(e) => setProjectTypeForm({ ...projectTypeForm, description: e.target.value })}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                rows={3}
+                placeholder="Beschreibung des Projekttyps..."
+              />
+            </div>
+
+            {/* Technologies */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Standard-Technologien
+              </label>
+              <div className="flex gap-2 mb-3">
+                <input
+                  type="text"
+                  value={newTechnology}
+                  onChange={(e) => setNewTechnology(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTechnology())}
+                  className="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="z.B. React, WordPress..."
+                />
+                <button
+                  type="button"
+                  onClick={addTechnology}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  <Plus size={18} />
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {projectTypeForm.technologies?.map((tech, index) => (
+                  <span
+                    key={index}
+                    className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
+                  >
+                    {tech}
+                    <button
+                      type="button"
+                      onClick={() => removeTechnology(tech)}
+                      className="text-blue-600 hover:text-blue-800"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Features */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Standard-Features
+              </label>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={projectTypeForm.features?.responsiveDesign}
+                    onChange={(e) => setProjectTypeForm({
+                      ...projectTypeForm,
+                      features: { ...projectTypeForm.features!, responsiveDesign: e.target.checked }
+                    })}
+                    className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <span className="text-sm text-gray-700">Responsive Design</span>
+                </label>
+                
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={projectTypeForm.features?.seoIncluded}
+                    onChange={(e) => setProjectTypeForm({
+                      ...projectTypeForm,
+                      features: { ...projectTypeForm.features!, seoIncluded: e.target.checked }
+                    })}
+                    className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <span className="text-sm text-gray-700">SEO inklusive</span>
+                </label>
+                
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={projectTypeForm.features?.contentManagement}
+                    onChange={(e) => setProjectTypeForm({
+                      ...projectTypeForm,
+                      features: { ...projectTypeForm.features!, contentManagement: e.target.checked }
+                    })}
+                    className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <span className="text-sm text-gray-700">Content Management</span>
+                </label>
+                
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={projectTypeForm.features?.maintenanceIncluded}
+                    onChange={(e) => setProjectTypeForm({
+                      ...projectTypeForm,
+                      features: { ...projectTypeForm.features!, maintenanceIncluded: e.target.checked }
+                    })}
+                    className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <span className="text-sm text-gray-700">Wartung inklusive</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Default Phases */}
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <label className="block text-sm font-medium text-gray-700">
+                  Standard-Projektphasen
+                </label>
+                <button
+                  type="button"
+                  onClick={addPhaseToProjectType}
+                  className="flex items-center gap-2 bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700 transition-colors text-sm"
+                >
+                  <Plus size={16} />
+                  Phase hinzufügen
+                </button>
+              </div>
+              
+              <div className="space-y-3">
+                {projectTypeForm.defaultPhases?.map((phase, index) => (
+                  <div key={phase.id} className="border border-gray-200 rounded-lg p-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+                      <div>
+                        <input
+                          type="text"
+                          value={phase.name}
+                          onChange={(e) => updatePhaseInProjectType(phase.id, { name: e.target.value })}
+                          className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Phasenname"
+                        />
+                      </div>
+                      
+                      <div>
+                        <input
+                          type="number"
+                          value={phase.estimatedHours}
+                          onChange={(e) => updatePhaseInProjectType(phase.id, { estimatedHours: parseFloat(e.target.value) || 0 })}
+                          className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Stunden"
+                          min="0"
+                          step="0.5"
+                        />
+                      </div>
+                      
+                      <div>
+                        <input
+                          type="number"
+                          value={phase.estimatedDays}
+                          onChange={(e) => updatePhaseInProjectType(phase.id, { estimatedDays: parseInt(e.target.value) || 0 })}
+                          className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Tage"
+                          min="0"
+                        />
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <label className="flex items-center text-sm">
+                          <input
+                            type="checkbox"
+                            checked={phase.isOptional}
+                            onChange={(e) => updatePhaseInProjectType(phase.id, { isOptional: e.target.checked })}
+                            className="mr-1 h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          />
+                          Optional
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => removePhaseFromProjectType(phase.id)}
+                          className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-3">
+                      <textarea
+                        value={phase.description}
+                        onChange={(e) => updatePhaseInProjectType(phase.id, { description: e.target.value })}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        rows={2}
+                        placeholder="Beschreibung der Phase..."
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              <button
+                onClick={handleSaveProjectTypeTemplate}
+                className="flex items-center gap-2 bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors"
+              >
+                <Save size={18} />
+                {editingProjectTypeId ? 'Aktualisieren' : 'Speichern'}
+              </button>
+              
+              {editingProjectTypeId && (
+                <button
+                  onClick={resetProjectTypeForm}
+                  className="px-6 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                >
+                  Abbrechen
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Saved Project Type Templates */}
+          <div className="bg-white rounded-lg shadow-sm border p-6">
+            <h2 className="text-xl font-semibold mb-4">
+              Gespeicherte Projekttyp-Vorlagen ({projectTypeTemplates.length})
+            </h2>
+            
+            {projectTypeTemplates.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <Briefcase size={48} className="mx-auto mb-4 opacity-50" />
+                <p>Noch keine Projekttyp-Vorlagen vorhanden</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {projectTypeTemplates.map((template) => (
+                  <div
+                    key={template.id}
+                    className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <h3 className="font-medium text-gray-900 mb-1">{template.name}</h3>
+                        <p className="text-sm text-gray-600 mb-2">{template.description}</p>
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                            {template.category}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {template.estimatedDuration} Tage • {formatCurrency(template.basePrice)}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-500">
+                          {template.defaultPhases.length} Phasen • {template.technologies.length} Technologien
+                        </p>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleEditProjectTypeTemplate(template)}
+                          className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                          title="Bearbeiten"
+                        >
+                          <Edit3 size={16} />
+                        </button>
+                        
+                        <button
+                          onClick={() => handleDeleteProjectTypeTemplate(template.id)}
+                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                          title="Löschen"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Phase Templates Tab */}
+      {activeTab === 'phases' && (
+        <div className="space-y-8">
+          {/* Phase Form */}
+          <div className="bg-white rounded-lg shadow-sm border p-6">
+            <h2 className="text-xl font-semibold mb-4">
+              {editingPhaseId ? 'Phasen-Vorlage bearbeiten' : 'Neue Phasen-Vorlage erstellen'}
+            </h2>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Phasenname *
+                </label>
+                <input
+                  type="text"
+                  value={phaseForm.name}
+                  onChange={(e) => setPhaseForm({ ...phaseForm, name: e.target.value })}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="z.B. Design & Konzept"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Geschätzte Stunden
+                </label>
+                <input
+                  type="number"
+                  value={phaseForm.estimatedHours}
+                  onChange={(e) => setPhaseForm({ ...phaseForm, estimatedHours: parseFloat(e.target.value) || 0 })}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  min="0"
+                  step="0.5"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Geschätzte Tage
+                </label>
+                <input
+                  type="number"
+                  value={phaseForm.estimatedDays}
+                  onChange={(e) => setPhaseForm({ ...phaseForm, estimatedDays: parseInt(e.target.value) || 0 })}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  min="0"
+                />
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Beschreibung
+              </label>
+              <textarea
+                value={phaseForm.description}
+                onChange={(e) => setPhaseForm({ ...phaseForm, description: e.target.value })}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                rows={3}
+                placeholder="Beschreibung der Phase..."
+              />
+            </div>
+
+            {/* Deliverables */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Liefergegenstände
+              </label>
+              <div className="flex gap-2 mb-3">
+                <input
+                  type="text"
+                  value={newDeliverable}
+                  onChange={(e) => setNewDeliverable(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addDeliverable())}
+                  className="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="z.B. Wireframes, Mockups..."
+                />
+                <button
+                  type="button"
+                  onClick={addDeliverable}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  <Plus size={18} />
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {phaseForm.deliverables?.map((deliverable, index) => (
+                  <span
+                    key={index}
+                    className="inline-flex items-center gap-1 bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm"
+                  >
+                    {deliverable}
+                    <button
+                      type="button"
+                      onClick={() => removeDeliverable(deliverable)}
+                      className="text-green-600 hover:text-green-800"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={phaseForm.isOptional}
+                  onChange={(e) => setPhaseForm({ ...phaseForm, isOptional: e.target.checked })}
+                  className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <span className="text-sm font-medium text-gray-700">
+                  Phase ist optional
+                </span>
+              </label>
+            </div>
+
+            <div className="flex gap-4">
+              <button
+                onClick={handleSavePhaseTemplate}
+                className="flex items-center gap-2 bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors"
+              >
+                <Save size={18} />
+                {editingPhaseId ? 'Aktualisieren' : 'Speichern'}
+              </button>
+              
+              {editingPhaseId && (
+                <button
+                  onClick={resetPhaseForm}
+                  className="px-6 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                >
+                  Abbrechen
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Saved Phase Templates */}
+          <div className="bg-white rounded-lg shadow-sm border p-6">
+            <h2 className="text-xl font-semibold mb-4">
+              Gespeicherte Phasen-Vorlagen ({projectPhaseTemplates.length})
+            </h2>
+            
+            {projectPhaseTemplates.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <Clock size={48} className="mx-auto mb-4 opacity-50" />
+                <p>Noch keine Phasen-Vorlagen vorhanden</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {projectPhaseTemplates.map((template) => (
+                  <div
+                    key={template.id}
+                    className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h3 className="font-medium text-gray-900">{template.name}</h3>
+                          {template.isOptional && (
+                            <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">
+                              Optional
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-600 mb-2">{template.description}</p>
+                        <div className="flex items-center gap-4 text-xs text-gray-500">
+                          <span>{template.estimatedHours}h</span>
+                          <span>{template.estimatedDays} Tage</span>
+                          <span>{template.deliverables.length} Liefergegenstände</span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleEditPhaseTemplate(template)}
+                          className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                          title="Bearbeiten"
+                        >
+                          <Edit3 size={16} />
+                        </button>
+                        
+                        <button
+                          onClick={() => handleDeletePhaseTemplate(template.id)}
+                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                          title="Löschen"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
