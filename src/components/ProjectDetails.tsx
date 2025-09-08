@@ -45,11 +45,6 @@ export const ProjectDetails: React.FC<ProjectDetailsProps> = ({
   const [showPreview, setShowPreview] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadCustomer();
-    loadAvailableDocuments();
-  }, [project.customerId]);
-
   const loadCustomer = async () => {
     setLoading(true);
     try {
@@ -62,6 +57,26 @@ export const ProjectDetails: React.FC<ProjectDetailsProps> = ({
       setLoading(false);
     }
   };
+
+  const loadAvailableDocuments = async () => {
+    try {
+      const allDocuments = await getSupabaseDocuments();
+      // Filter documents that belong to this customer
+      const customerDocuments = allDocuments.filter(doc => 
+        doc.linkedCustomerId === project.customerId ||
+        doc.customer.name === project.customerName ||
+        doc.customer.name.toLowerCase().includes(project.customerName.toLowerCase())
+      );
+      setAvailableDocuments(customerDocuments);
+    } catch (error) {
+      console.error('Error loading documents:', error);
+    }
+  };
+
+  useEffect(() => {
+    loadCustomer();
+    loadAvailableDocuments();
+  }, [project.customerId]);
 
   if (loading) {
     return (
@@ -88,21 +103,6 @@ export const ProjectDetails: React.FC<ProjectDetailsProps> = ({
       </div>
     );
   }
-
-  const loadAvailableDocuments = async () => {
-    try {
-      const allDocuments = await getSupabaseDocuments();
-      // Filter documents that belong to this customer
-      const customerDocuments = allDocuments.filter(doc => 
-        doc.linkedCustomerId === project.customerId ||
-        doc.customer.name === project.customerName ||
-        doc.customer.name.toLowerCase().includes(project.customerName.toLowerCase())
-      );
-      setAvailableDocuments(customerDocuments);
-    } catch (error) {
-      console.error('Error loading documents:', error);
-    }
-  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
