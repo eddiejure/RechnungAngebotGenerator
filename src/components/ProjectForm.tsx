@@ -47,7 +47,7 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({ initialData, onSave, o
     documents: [],
     phases: defaultPhases.map(phase => ({
       ...phase,
-      id: `phase-${Date.now()}-${phase.order}`,
+      id: crypto.randomUUID(),
     })),
   });
 
@@ -58,9 +58,9 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({ initialData, onSave, o
     if (initialData) {
       setFormData({
         ...initialData,
-        phases: initialData.phases.length > 0 ? initialData.phases : defaultPhases.map(phase => ({
+        phases: initialData.phases.length > 0 ? initialData.phases : defaultPhases.map((phase, index) => ({
           ...phase,
-          id: `phase-${Date.now()}-${phase.order}`,
+          id: crypto.randomUUID(),
         })),
       });
     }
@@ -112,7 +112,7 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({ initialData, onSave, o
 
   const addPhase = () => {
     const newPhase: ProjectPhase = {
-      id: `phase-${Date.now()}`,
+      id: crypto.randomUUID(),
       name: '',
       description: '',
       status: 'Geplant',
@@ -140,7 +140,7 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({ initialData, onSave, o
     }
 
     const project: Project = {
-      id: initialData?.id || `project-${Date.now()}`,
+      id: initialData?.id || crypto.randomUUID(),
       name: formData.name!,
       customerId: formData.customerId!,
       customerName: formData.customerName!,

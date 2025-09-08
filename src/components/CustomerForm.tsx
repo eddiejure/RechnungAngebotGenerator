@@ -42,7 +42,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ initialData, onSave,
     }
 
     const customer: Customer = {
-      id: initialData?.id || `customer-${Date.now()}`,
+      id: initialData?.id || crypto.randomUUID(),
       name: formData.name!,
       company: formData.company,
       email: formData.email!,

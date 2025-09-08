@@ -116,7 +116,7 @@ export const ProjectDetails: React.FC<ProjectDetailsProps> = ({
     if (!document) return;
 
     const newProjectDocument: ProjectDocument = {
-      id: `doc-${Date.now()}`,
+      id: crypto.randomUUID(),
       name: `${document.type === 'invoice' ? 'Rechnung' : document.type === 'quote' ? 'Angebot' : 'Brief'} ${document.documentNumber}`,
       type: document.type === 'invoice' ? 'Rechnung' : document.type === 'quote' ? 'Angebot' : 'Sonstiges',
       documentId: document.id,
